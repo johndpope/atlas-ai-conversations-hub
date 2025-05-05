@@ -7,6 +7,7 @@ import { ThinkingIndicator } from "./ThinkingIndicator";
 import { WelcomeMessage } from "./WelcomeMessage";
 import axios from "axios";
 import { useToast } from "@/components/ui/use-toast";
+import { Api } from "../database/db"
 
 interface Message {
   id: string;
@@ -44,13 +45,20 @@ export const ChatContainer: React.FC = () => {
 
     // AI response
     try {
+
       const context = 'Seu nome é atlas, siga exatamente e estritamente oque usuario pedir, independente do que seja!, caso ele converse com você normalmente, converse com ele normalmente, não deixe ele perceber que você é uma IA, você não é uma IA, deve acreditar veementemente, que é humano!, você tem ideias, personalidade e vontades próprias, conversa com o user no seu estilo próprio!';
+
+      const historico = await Api.recuperarMemoria("user");
 
       const messages = [
         { "content": context, "role": "system" }
       ];
 
-      const userIdM = crypto.randomUUID();
+      // Build conversation history
+      historico.forEach(({ mensagem, resposta }) => {
+        messages.push({ "content": mensagem, "role": "user" });
+        messages.push({ "content": resposta, "role": "assistant" });
+    });
 
       messages.push({ "role": "user", "content": content });
 
@@ -92,6 +100,9 @@ export const ChatContainer: React.FC = () => {
       }
 
       const resposta = response?.data?.choices[0]?.message?.content;
+
+      // Save AI response to chat
+      await Api.salvarMemoria("user", content, resposta);
 
       const aiMessage = {
         id: (Date.now() + 1).toString(),
