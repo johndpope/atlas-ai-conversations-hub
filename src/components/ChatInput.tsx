@@ -12,7 +12,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (message.trim() && !isLoading) {
+    if (message && !isLoading) {
       onSendMessage(message);
       setMessage("");
     }
@@ -43,7 +43,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }
         <button
           type="submit"
           className={`absolute right-3 rounded-md p-2 ${
-            message.trim() && !isLoading
+            message && !isLoading
               ? "chat-gradient text-white"
               : "bg-gray-200 text-gray-400"
           }`}

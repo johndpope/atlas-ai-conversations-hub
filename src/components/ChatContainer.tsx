@@ -5,8 +5,8 @@ import { ChatMessage } from "./ChatMessage";
 import { ChatInput } from "./ChatInput";
 import { ThinkingIndicator } from "./ThinkingIndicator";
 import { WelcomeMessage } from "./WelcomeMessage";
-import { useToast } from "@/components/ui/use-toast";
 import axios from "axios";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Message {
   id: string;
@@ -50,6 +50,8 @@ export const ChatContainer: React.FC = () => {
         { "content": context, "role": "system" }
       ];
 
+      const userIdM = crypto.randomUUID();
+
       messages.push({ "role": "user", "content": content });
 
       const modelUrl = "https://api.groq.com/openai/v1/chat/completions";
@@ -78,6 +80,7 @@ export const ChatContainer: React.FC = () => {
         "stop": null,
         "stream": false
       };
+
       const response = await axios.post(modelUrl, data, { headers });
 
       if (response.status === 400) {
@@ -88,11 +91,11 @@ export const ChatContainer: React.FC = () => {
         throw new Error('Invalid response format from API');
       }
 
-      const texto = response.data.choices[0].message.content;
+      const resposta = response?.data?.choices[0]?.message?.content;
 
       const aiMessage = {
         id: (Date.now() + 1).toString(),
-        content: texto,
+        content: resposta.replace(/\*\*/g, '*'),
         isUser: false,
       };
 

@@ -9,15 +9,8 @@ interface ChatMessageProps {
 
 export const ChatMessage: React.FC<ChatMessageProps> = ({ content, isUser }) => {
   return (
-    <div
-      className={`flex items-start gap-4 py-4 px-6 ${
-        isUser ? "bg-white" : "message-ai"
-      }`}
-    >
-      <div className="shrink-0">
-        {isUser ? (
-          <UserCircle className="h-8 w-8 text-slate-500" />
-        ) : (
+    <div className={`flex items-start gap-4 py-4 px-6 ${isUser ? "bg-white" : "message-ai"}`}>
+      <div className="shrink-0"> {isUser ? ( <UserCircle className="h-8 w-8 text-slate-500" /> ) : (
           <div className="h-8 w-8 rounded-full chat-gradient flex items-center justify-center">
             <span className="text-white font-semibold text-sm">A</span>
           </div>
@@ -27,7 +20,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ content, isUser }) => 
         <p className="font-medium text-sm text-slate-700">
           {isUser ? "You" : "Atlas AI"}
         </p>
-        <div className="prose prose-slate prose-sm max-w-none">
+        <div className="prose prose-slate prose-sm max-w-none whitespace-pre-wrap">
           <p>{content}</p>
         </div>
       </div>
