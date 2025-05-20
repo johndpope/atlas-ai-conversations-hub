@@ -8,6 +8,7 @@ import { WelcomeMessage } from "./WelcomeMessage";
 import axios from "axios";
 import { useToast } from "@/components/ui/use-toast";
 import { Api } from "../database/db"
+import { apiKeyGrok } from "../../variables.json"
 
 interface Message {
   id: string;
@@ -64,7 +65,7 @@ export const ChatContainer: React.FC = () => {
 
       const modelUrl = "https://api.groq.com/openai/v1/chat/completions";
       const headers = {
-        "Authorization": 'Bearer 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',
+        "Authorization": 'Bearer ' + apiKeyGrok,
         "Content-Type": "application/json"
       };
 
