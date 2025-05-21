@@ -36,6 +36,8 @@ O projeto foi desenvolvido utilizando as seguintes tecnologias:
 
 ## Instalação
 
+Em ```variables.json```, coloque sua API Key da Groq.
+
 ```bash
 # Clone o repositório
 git clone https://github.com/speNillusion/atlas-ai-conversations-hub.git
