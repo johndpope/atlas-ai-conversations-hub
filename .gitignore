@@ -6,12 +6,12 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-variables.json
 
 node_modules
 dist
 android
 ios
+variables.json
 dist-ssr
 *.local
 
