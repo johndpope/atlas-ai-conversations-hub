@@ -76,12 +76,12 @@ export const ChatContainer: React.FC = () => {
 
       const maverick = "meta-llama/llama-4-maverick-17b-128e-instruct"; // 8192
 
-      const gemma = "gemma2-9b-it" // 8192
+      const gemma = "gemma2-9b-it"; // 8192
 
       const data = {
         model: gemma,
         messages: messages,
-        temperature: 1,
+        temperature: 0.5,
         max_completion_tokens: 8192,
         top_p: 1,
         stop: null,
