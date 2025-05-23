@@ -1,4 +1,3 @@
-
 import React from "react";
 import { UserCircle } from "lucide-react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -9,7 +8,10 @@ interface ChatMessageProps {
   isUser: boolean;
 }
 
-export const ChatMessage: React.FC<ChatMessageProps> = ({ content, isUser }) => {
+export const ChatMessage: React.FC<ChatMessageProps> = ({
+  content,
+  isUser,
+}) => {
   const renderContent = () => {
     const codeBlockRegex = /```(\w*)\n?([\s\S]*?)```/g;
     const parts = [];
@@ -26,11 +28,11 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ content, isUser }) => 
         );
       }
 
-      // Extrair linguagem e código
+      // Extraction of the language and code
       const language = match[1].trim() || "text";
-      const code = match[2].trim();
+      const code = match[2];
 
-      // Adicionar bloco de código formatado
+      // that is the code block
       parts.push(
         <div key={`code-${match.index}`} className="code-block my-2">
           {language !== "text" && (
@@ -63,18 +65,26 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ content, isUser }) => 
   };
 
   return (
-    <div className={`flex items-start gap-4 py-4 px-6 ${isUser ? "bg-white" : "message-ai"}`}>
-      <div className="shrink-0"> {isUser ? ( <UserCircle className="h-8 w-8 text-slate-500" /> ) : (
+    <div
+      className={`flex items-start gap-4 py-4 px-3 sm:px-6 ${
+        isUser ? "bg-white" : "message-ai"
+      }`}
+    >
+      <div className="shrink-0">
+        {" "}
+        {isUser ? (
+          <UserCircle className="h-8 w-8 text-slate-500" />
+        ) : (
           <div className="h-8 w-8 rounded-full chat-gradient flex items-center justify-center">
             <span className="text-white font-semibold text-sm">A</span>
           </div>
         )}
       </div>
-      <div className="flex-1 space-y-2">
+      <div className="flex-1 min-w-0 space-y-2">
         <p className="font-medium text-sm text-slate-700">
           {isUser ? "You" : "Atlas AI"}
         </p>
-        <div className="prose prose-slate prose-sm max-w-none whitespace-pre-wrap">
+        <div className="prose prose-slate prose-sm max-w-none break-words overflow-hidden">
           {renderContent()}
         </div>
       </div>
