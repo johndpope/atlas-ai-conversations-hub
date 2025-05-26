@@ -13,26 +13,28 @@ Um assistente de IA moderno e intuitivo para suas conversas diárias
 
 ## Sobre o Projeto
 
+**Atenção** projeto utiliza licença: [LICENSE](./LICENSE)
+
 Atlas AI é um assistente de inteligência artificial desenvolvido com tecnologias modernas, oferecendo uma interface amigável e responsiva para interações naturais. Disponível tanto para web quanto para dispositivos móveis através do Capacitor, o Atlas AI está sempre pronto para ajudar com suas perguntas e necessidades.
 
 ## Funcionalidades
 
-- 💬 Interface de chat intuitiva e moderna
-- 🎨 Design responsivo e adaptável
-- 📱 Suporte multiplataforma (Web e Mobile)
-- 🔄 Integração perfeita com IA
-- 💾 Armazenamento local com SQLite (Dexie)
-- 🎯 Componentes UI personalizados com Radix UI
+- 💬 Interface de chat intuitiva e moderna  
+- 🎨 Design responsivo e adaptável  
+- 📱 Suporte multiplataforma (Web e Mobile)  
+- 🔄 Integração perfeita com IA  
+- 💾 Armazenamento local com SQLite (Dexie)  
+- 🎯 Componentes UI personalizados com Radix UI  
 
 ## Tecnologias
 
 O projeto foi desenvolvido utilizando as seguintes tecnologias:
 
-- **React**: Biblioteca JavaScript para construção de interfaces
-- **TypeScript**: Superset JavaScript com tipagem estática
-- **Capacitor**: Framework para desenvolvimento de aplicações móveis híbridas
-- **Radix UI**: Biblioteca de componentes UI primitivos e acessíveis
-- **SQLite**: Sistema de gerenciamento de banco de dados relacional
+- **React**: Biblioteca JavaScript para construção de interfaces  
+- **TypeScript**: Superset JavaScript com tipagem estática  
+- **Capacitor**: Framework para desenvolvimento de aplicações móveis híbridas  
+- **Radix UI**: Biblioteca de componentes UI primitivos e acessíveis  
+- **SQLite**: Sistema de gerenciamento de banco de dados relacional  
 
 ## Instalação
 
