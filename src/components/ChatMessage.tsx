@@ -2,6 +2,8 @@ import React from "react";
 import { UserCircle } from "lucide-react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface ChatMessageProps {
   content: string;
@@ -13,55 +15,42 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
   isUser,
 }) => {
   const renderContent = () => {
-    const codeBlockRegex = /```(\w*)\n?([\s\S]*?)```/g;
-    const parts = [];
-    let lastIndex = 0;
-    let match;
+    return (
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          code({ node, inline, className, children, ...props }: { node: any, inline: boolean, className?: string, children: React.ReactNode }) {
+            const match = /language-(\w+)/.exec(className || "");
+            const language = match ? match[1] : "";
 
-    while ((match = codeBlockRegex.exec(content)) !== null) {
-      // Adicionar texto antes do bloco de código
-      if (match.index > lastIndex) {
-        parts.push(
-          <p key={`text-${lastIndex}`}>
-            {content.substring(lastIndex, match.index)}
-          </p>
-        );
-      }
-
-      // Extraction of the language and code
-      const language = match[1].trim() || "text";
-      const code = match[2];
-
-      // that is the code block
-      parts.push(
-        <div key={`code-${match.index}`} className="code-block my-2">
-          {language !== "text" && (
-            <div className="code-header">
-              <span>{language}</span>
-            </div>
-          )}
-          <SyntaxHighlighter
-            language={language}
-            style={vscDarkPlus}
-            customStyle={{ margin: 0 }}
-            showLineNumbers={language !== "text"}
-          >
-            {code}
-          </SyntaxHighlighter>
-        </div>
-      );
-
-      lastIndex = match.index + match[0].length;
-    }
-
-    // Adicionar texto restante
-    if (lastIndex < content.length) {
-      parts.push(
-        <p key={`text-${lastIndex}`}>{content.substring(lastIndex)}</p>
-      );
-    }
-
-    return parts.length > 0 ? parts : <p>{content}</p>;
+            return !inline ? (
+              <div className="code-block my-2">
+                {language && (
+                  <div className="code-header">
+                    <span>{language}</span>
+                  </div>
+                )}
+                <SyntaxHighlighter
+                  language={language || "text"}
+                  style={vscDarkPlus}
+                  customStyle={{ margin: 0 }}
+                  showLineNumbers={!!language}
+                  {...props}
+                >
+                  {String(children).replace(/\n$/, "")}
+                </SyntaxHighlighter>
+              </div>
+            ) : (
+              <code className={className} {...props}>
+                {children}
+              </code>
+            );
+          },
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    );
   };
 
   return (
