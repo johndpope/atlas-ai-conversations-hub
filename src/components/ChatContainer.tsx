@@ -98,25 +98,46 @@ export const ChatContainer: React.FC = () => {
         const ai = new GoogleGenAI({
           apiKey: geminiKey,
         });
-        const response = await ai.models.generateContent({
+        const response = await ai.models.generateContentStream({
           model: "gemini-2.0-flash",
           contents: content,
         });
-        resposta = response.text;
 
-        // Process response
-        const thinkMatch = resposta.match(/<think>(.*?)<\/think>/s);
-        const cleanedResponse = resposta
-          .replace(/\*\*/g, "*")
-          .replace(/<think>.*?<\/think>/gs, "");
+        for await (const chunk of response) {
+          if (chunk.text) {
+            resposta += chunk.text;
+            let currentContent = resposta;
+            let currentThink = null;
 
+            const thinkMatch = resposta.match(/<think>(.*?)<\/think>/s);
+            if (thinkMatch) {
+              currentThink = thinkMatch[1].trim();
+              currentContent = resposta.replace(/<think>.*?<\/think>/gs, "");
+            }
+
+            currentContent = currentContent.replace(/\*\*/g, "*").trim();
+
+            setMessages((prevMessages) =>
+              prevMessages.map((msg) =>
+                msg.isUser === false && msg.isStreaming
+                  ? {
+                      ...msg,
+                      content: currentContent,
+                      think: currentThink,
+                      isStreaming: true,
+                    }
+                  : msg
+              )
+            );
+          }
+        }
+
+        // Finalize the message stream
         setMessages((prevMessages) =>
           prevMessages.map((msg) =>
             msg.isUser === false && msg.isStreaming
               ? {
                   ...msg,
-                  content: cleanedResponse.trim(),
-                  think: thinkMatch ? thinkMatch[1].trim() : null,
                   isStreaming: false,
                 }
               : msg
