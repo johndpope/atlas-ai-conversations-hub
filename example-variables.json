@@ -1,3 +1,4 @@
 {
-  "apiKeyGroq": "your-api-key-here"
+  "apiKeyGroq": "your-api-key-here",
+  "geminiKey": "your-api-key-here-gemini"
 }

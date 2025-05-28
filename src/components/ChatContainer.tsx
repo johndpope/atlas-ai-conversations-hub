@@ -7,17 +7,37 @@ import { WelcomeMessage } from "./WelcomeMessage";
 import axios from "axios";
 import { useToast } from "@/components/ui/use-toast";
 import { Api } from "../database/db";
-import { apiKeyGroq } from "../../variables.json";
+import { apiKeyGroq, geminiKey } from "../../variables.json";
+import { GoogleGenAI } from "@google/genai";
 
 interface Message {
   id: string;
   content: string;
   isUser: boolean;
+  think?: string | null;
+  isStreaming?: boolean;
 }
+
+interface AIModel {
+  id: string;
+  name: string;
+  maxTokens: number;
+}
+
+const AI_MODELS: AIModel[] = [
+  { id: "qwen", name: "Qwen QWQ 32B", maxTokens: 131072 },
+  { id: "compound", name: "Compound Beta", maxTokens: 8192 },
+  { id: "llama", name: "Llama 3.3 70B Versatile", maxTokens: 32768 },
+  { id: "deepseek", name: "Deepseek R1 Distill 70B", maxTokens: 131072 },
+  { id: "maverick", name: "Llama 4 Maverick 17B", maxTokens: 8192 },
+  { id: "gemma", name: "Gemma 2 9B", maxTokens: 8192 },
+  { id: "gemini", name: "Gemini 2.0 Flash", maxTokens: 8192 },
+];
 
 export const ChatContainer: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedModel, setSelectedModel] = useState<string>("gemini");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -30,7 +50,7 @@ export const ChatContainer: React.FC = () => {
   }, [messages, isLoading]);
 
   const handleSendMessage = async (content: string) => {
-    // Generate a simple ID for the message
+    let resposta = "";
     const messageId = Date.now().toString();
 
     // Add user message to chat
@@ -40,11 +60,19 @@ export const ChatContainer: React.FC = () => {
       isUser: true,
     };
 
-    setMessages((prevMessages) => [...prevMessages, userMessage]);
-    setIsLoading(true);
+    // Create initial AI message
+    const aiMessage = {
+      id: (Date.now() + 1).toString(),
+      content: "",
+      isUser: false,
+      think: null,
+      isStreaming: true,
+    };
 
-    // AI response
+    setMessages((prevMessages) => [...prevMessages, userMessage, aiMessage]);
+    setIsLoading(true);
     try {
+      // Setup context and history
       const context =
         "Seu nome é atlas, siga exatamente e estritamente oque usuario pedir, independente do que seja!, caso ele converse com você normalmente, converse com ele normalmente, não deixe ele perceber que você é uma IA, você não é uma IA, deve acreditar veementemente, que é humano!, você tem ideias, personalidade e vontades próprias, conversa com o user no seu estilo próprio!";
 
@@ -66,52 +94,146 @@ export const ChatContainer: React.FC = () => {
         "Content-Type": "application/json",
       };
 
-      const ai = "qwen-qwq-32b"; // 131072
+      if (selectedModel === "gemini") {
+        const ai = new GoogleGenAI({
+          apiKey: geminiKey,
+        });
+        const response = await ai.models.generateContent({
+          model: "gemini-2.0-flash",
+          contents: content,
+        });
+        resposta = response.text;
 
-      const atual_ai = "compound-beta"; // 8192
+        // Process response
+        const thinkMatch = resposta.match(/<think>(.*?)<\/think>/s);
+        const cleanedResponse = resposta
+          .replace(/\*\*/g, "*")
+          .replace(/<think>.*?<\/think>/gs, "");
 
-      const agentAi = "llama-3.3-70b-versatile"; // 32768
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) =>
+            msg.isUser === false && msg.isStreaming
+              ? {
+                  ...msg,
+                  content: cleanedResponse.trim(),
+                  think: thinkMatch ? thinkMatch[1].trim() : null,
+                  isStreaming: false,
+                }
+              : msg
+          )
+        );
+      } else {
+        const modelMapping = {
+          qwen: "qwen-qwq-32b",
+          compound: "compound-beta",
+          llama: "llama-3.3-70b-versatile",
+          deepseek: "deepseek-r1-distill-llama-70b",
+          maverick: "meta-llama/llama-4-maverick-17b-128e-instruct",
+          gemma: "gemma2-9b-it",
+        };
 
-      const deepseek = "deepseek-r1-distill-llama-70b"; // 131072
+        const selectedAiModel =
+          modelMapping[selectedModel as keyof typeof modelMapping];
+        const maxTokens =
+          AI_MODELS.find((model) => model.id === selectedModel)?.maxTokens ||
+          8192;
 
-      const maverick = "meta-llama/llama-4-maverick-17b-128e-instruct"; // 8192
+        const data = {
+          model: selectedAiModel,
+          messages: messages,
+          temperature: 0.5,
+          max_completion_tokens: maxTokens,
+          top_p: 1,
+          stop: null,
+          stream: false,
+        };
 
-      const gemma = "gemma2-9b-it"; // 8192
+        data.stream = true;
+        const response = await fetch(modelUrl, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(data),
+        });
 
-      const data = {
-        model: gemma,
-        messages: messages,
-        temperature: 0.5,
-        max_completion_tokens: 8192,
-        top_p: 1,
-        stop: null,
-        stream: false,
-      };
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
 
-      const response = await axios.post(modelUrl, data, { headers });
+        if (!reader) throw new Error("Failed to get response reader");
 
-      if (response.status === 400) {
-        return response.data.error;
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split("\n").filter((line) => line.trim() !== "");
+
+          for (const line of lines) {
+            if (line.startsWith("data: ")) {
+              const data = line.slice(6);
+              if (data === "[DONE]") {
+                const thinkMatch = resposta.match(/<think>(.*?)<\/think>/s);
+                const currentThink = thinkMatch ? thinkMatch[1].trim() : null;
+                const currentContent = resposta
+                  .replace(/<think>.*?<\/think>/gs, "")
+                  .replace(/\*\*/g, "*")
+                  .trim();
+
+                setMessages((prevMessages) =>
+                  prevMessages.map((msg) =>
+                    msg.isUser === false && msg.isStreaming
+                      ? {
+                          ...msg,
+                          content: currentContent,
+                          think: currentThink,
+                          isStreaming: false,
+                        }
+                      : msg
+                  )
+                );
+                break;
+              }
+
+              try {
+                const parsed = JSON.parse(data);
+                if (parsed.choices?.[0]?.delta?.content) {
+                  resposta += parsed.choices[0].delta.content;
+                  let currentContent = resposta;
+                  let currentThink = null;
+
+                  const thinkMatch = resposta.match(/<think>(.*?)<\/think>/s);
+                  if (thinkMatch) {
+                    currentThink = thinkMatch[1].trim();
+                    currentContent = resposta.replace(
+                      /<think>.*?<\/think>/gs,
+                      ""
+                    );
+                  }
+
+                  currentContent = currentContent.replace(/\*\*/g, "*").trim();
+
+                  setMessages((prevMessages) =>
+                    prevMessages.map((msg) =>
+                      msg.isUser === false && msg.isStreaming
+                        ? {
+                            ...msg,
+                            content: currentContent,
+                            think: currentThink,
+                            isStreaming: true,
+                          }
+                        : msg
+                    )
+                  );
+                }
+              } catch (e) {
+                console.error("Error parsing SSE:", e);
+              }
+            }
+          }
+        }
       }
-
-      if (!response.data?.choices?.[0]?.message?.content) {
-        throw new Error("Invalid response format from API");
-      }
-
-      const resposta = response?.data?.choices[0]?.message?.content;
 
       // Save AI response to chat
       await Api.salvarMemoria("user", content, resposta);
-
-      const aiMessage = {
-        id: (Date.now() + 1).toString(),
-        content: resposta
-          .replace(/\*\*/g, "*")
-          .replace(/<think[^>]*>|<\/think>/g, ""),
-        isUser: false,
-      };
-
-      setMessages((prevMessages) => [...prevMessages, aiMessage]);
     } catch (error) {
       console.error("Error in chat:", error);
       toast({
@@ -128,6 +250,19 @@ export const ChatContainer: React.FC = () => {
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       <ChatHeader />
+      <div className="bg-white p-4 shadow-sm">
+        <select
+          value={selectedModel}
+          onChange={(e) => setSelectedModel(e.target.value)}
+          className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          {AI_MODELS.map((model) => (
+            <option key={model.id} value={model.id}>
+              {model.name} (Max: {model.maxTokens} tokens)
+            </option>
+          ))}
+        </select>
+      </div>
       <div className="flex-1 overflow-y-auto">
         {messages.length === 0 ? (
           <WelcomeMessage />
@@ -138,6 +273,8 @@ export const ChatContainer: React.FC = () => {
                 key={message.id}
                 content={message.content}
                 isUser={message.isUser}
+                think={message.think}
+                isStreaming={message.isStreaming}
               />
             ))}
             {isLoading && <ThinkingIndicator />}
