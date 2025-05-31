@@ -96,7 +96,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
             </div>
           </div>
         )}
-        <div className="prose prose-slate prose-sm max-w-none break-words overflow-hidden relative">
+        <div className="prose prose-slate prose-sm max-w-none break-words text-start items-start justify-items-start overflow-hidden relative">
           {renderContent()}
           {isStreaming && (
             <span className="inline-block w-1 h-4 ml-1 bg-blue-500 animate-pulse" />

@@ -4,7 +4,6 @@ import { ChatMessage } from "./ChatMessage";
 import { ChatInput } from "./ChatInput";
 import { ThinkingIndicator } from "./ThinkingIndicator";
 import { WelcomeMessage } from "./WelcomeMessage";
-import axios from "axios";
 import { useToast } from "@/components/ui/use-toast";
 import { Api } from "../database/db";
 import { apiKeyGroq, geminiKey } from "../../variables.json";
@@ -26,6 +25,7 @@ interface AIModel {
 
 const AI_MODELS: AIModel[] = [
   { id: "qwen", name: "Qwen QWQ 32B", maxTokens: 131072 },
+  { id: "ChatGpt", name: "GPT 4.0 PRO", maxTokens: 32768 },
   { id: "compound", name: "Compound Beta", maxTokens: 8192 },
   { id: "llama", name: "Llama 3.3 70B Versatile", maxTokens: 32768 },
   { id: "deepseek", name: "Deepseek R1 Distill 70B", maxTokens: 131072 },
@@ -37,7 +37,7 @@ const AI_MODELS: AIModel[] = [
 export const ChatContainer: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<string>("gemini");
+  const [selectedModel, setSelectedModel] = useState<string>("ChatGpt");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -60,16 +60,7 @@ export const ChatContainer: React.FC = () => {
       isUser: true,
     };
 
-    // Create initial AI message
-    const aiMessage = {
-      id: (Date.now() + 1).toString(),
-      content: "",
-      isUser: false,
-      think: null,
-      isStreaming: true,
-    };
-
-    setMessages((prevMessages) => [...prevMessages, userMessage, aiMessage]);
+    setMessages((prevMessages) => [...prevMessages, userMessage]);
     setIsLoading(true);
     try {
       // Setup context and history
@@ -88,7 +79,7 @@ export const ChatContainer: React.FC = () => {
 
       messages.push({ role: "user", content: content });
 
-      const modelUrl = "https://api.groq.com/openai/v1/chat/completions";
+      const modelUrl = "/openai/v1/chat/completions";
       const headers = {
         Authorization: "Bearer " + apiKeyGroq,
         "Content-Type": "application/json",
@@ -103,23 +94,46 @@ export const ChatContainer: React.FC = () => {
           contents: content,
         });
 
+        const aiMessageId = (Date.now() + 1).toString();
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          {
+            id: aiMessageId,
+            content: "",
+            isUser: false,
+            think: null,
+            isStreaming: true,
+          },
+        ]);
+
         for await (const chunk of response) {
           if (chunk.text) {
             resposta += chunk.text;
             let currentContent = resposta;
             let currentThink = null;
 
-            const thinkMatch = resposta.match(/<think>(.*?)<\/think>/s);
-            if (thinkMatch) {
-              currentThink = thinkMatch[1].trim();
-              currentContent = resposta.replace(/<think>.*?<\/think>/gs, "");
+            const fullThinkTagRegex = /<think>(.*?)<\/think>/s;
+            const openThinkTagRegex = /<think>(.*)/s; // Capture everything after <think>
+
+            const fullThinkMatch = resposta.match(fullThinkTagRegex);
+            const openThinkMatch = resposta.match(openThinkTagRegex);
+
+            if (fullThinkMatch) {
+              currentThink = fullThinkMatch[1].trim();
+              currentContent = resposta.replace(fullThinkTagRegex, ""); // Remove full tag from main content
+            } else if (openThinkMatch) {
+              // If <think> is open but not yet closed, extract content after <think>
+              currentThink = openThinkMatch[1].trim();
+              // Do NOT modify currentContent here. It should still contain the raw <think> tag.
+            } else {
+              currentThink = null;
             }
 
             currentContent = currentContent.replace(/\*\*/g, "*").trim();
 
             setMessages((prevMessages) =>
               prevMessages.map((msg) =>
-                msg.isUser === false && msg.isStreaming
+                msg.id === aiMessageId
                   ? {
                       ...msg,
                       content: currentContent,
@@ -131,18 +145,47 @@ export const ChatContainer: React.FC = () => {
             );
           }
         }
+      } else if (selectedModel === "ChatGpt") {
+        const historico = await Api.recuperarMemoria("user");
+        const messages = [];
 
-        // Finalize the message stream
-        setMessages((prevMessages) =>
-          prevMessages.map((msg) =>
-            msg.isUser === false && msg.isStreaming
-              ? {
-                  ...msg,
-                  isStreaming: false,
-                }
-              : msg
-          )
-        );
+        // Build conversation history
+        historico.forEach(({ mensagem, resposta }) => {
+          messages.push({ id: "user", text: `Human: ${mensagem}` });
+          messages.push({ id: "assistant", text: `AI: ${resposta}` });
+        });
+
+        const url = "/wp-admin/admin-ajax.php";
+
+        const formData = new FormData();
+        formData.append("_wpnonce", "a581e7ac21");
+        formData.append("post_id", "5551");
+        formData.append("url", "https://chatgptdemo.ai/chat");
+        formData.append("action", "wpaicg_chat_shortcode_message");
+        formData.append("message", content);
+        formData.append("bot_id", "0");
+        formData.append("chatbot_identity", "shortcode");
+        formData.append("wpaicg_chat_history", JSON.stringify(messages));
+        formData.append("wpaicg_chat_client_id", "user");
+
+        const response = await fetch(url, {
+          method: "POST",
+          body: formData,
+          headers: {
+            "X-Requested-With": "XMLHttpRequest",
+          },
+        }).then((response) => response.json());
+
+        resposta = response?.data;
+
+        const newAiMessage = {
+          id: (Date.now() + 1).toString(),
+          content: resposta,
+          isUser: false,
+          think: null,
+          isStreaming: false,
+        };
+        setMessages((prevMessages) => [...prevMessages, newAiMessage]);
       } else {
         const modelMapping = {
           qwen: "qwen-qwq-32b",
@@ -176,6 +219,18 @@ export const ChatContainer: React.FC = () => {
           body: JSON.stringify(data),
         });
 
+        const aiMessageId = (Date.now() + 1).toString();
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          {
+            id: aiMessageId,
+            content: "",
+            isUser: false,
+            think: null,
+            isStreaming: true,
+          },
+        ]);
+
         const reader = response.body?.getReader();
         const decoder = new TextDecoder();
 
@@ -192,16 +247,31 @@ export const ChatContainer: React.FC = () => {
             if (line.startsWith("data: ")) {
               const data = line.slice(6);
               if (data === "[DONE]") {
-                const thinkMatch = resposta.match(/<think>(.*?)<\/think>/s);
+                const thinkTagRegex = /<think>(.*?)<\/think>/s;
+                const thinkMatch = resposta.match(thinkTagRegex);
                 const currentThink = thinkMatch ? thinkMatch[1].trim() : null;
-                const currentContent = resposta
-                  .replace(/<think>.*?<\/think>/gs, "")
-                  .replace(/\*\*/g, "*")
-                  .trim();
+                let currentContent = resposta; // Start with the full response
+
+                if (thinkMatch) {
+                  currentContent = resposta.replace(thinkTagRegex, ""); // Remove full tag from main content
+                }
+
+                currentContent = currentContent.replace(/\*\*/g, "*").trim();
+
+                // Ensure think is null when stream is done and no think tag is present
+                if (!thinkMatch) {
+                  setMessages((prevMessages) =>
+                    prevMessages.map((msg) =>
+                      msg.id === aiMessageId
+                        ? { ...msg, think: null }
+                        : msg
+                    )
+                  );
+                }
 
                 setMessages((prevMessages) =>
                   prevMessages.map((msg) =>
-                    msg.isUser === false && msg.isStreaming
+                    msg.id === aiMessageId
                       ? {
                           ...msg,
                           content: currentContent,
@@ -221,20 +291,28 @@ export const ChatContainer: React.FC = () => {
                   let currentContent = resposta;
                   let currentThink = null;
 
-                  const thinkMatch = resposta.match(/<think>(.*?)<\/think>/s);
-                  if (thinkMatch) {
-                    currentThink = thinkMatch[1].trim();
-                    currentContent = resposta.replace(
-                      /<think>.*?<\/think>/gs,
-                      ""
-                    );
+                  const fullThinkTagRegex = /<think>(.*?)<\/think>/s;
+                  const openThinkTagRegex = /<think>(.*)/s; // Capture everything after <think>
+
+                  const fullThinkMatch = resposta.match(fullThinkTagRegex);
+                  const openThinkMatch = resposta.match(openThinkTagRegex);
+
+                  if (fullThinkMatch) {
+                    currentThink = fullThinkMatch[1].trim();
+                    currentContent = resposta.replace(fullThinkTagRegex, ""); // Remove full tag from main content
+                  } else if (openThinkMatch) {
+                    // If <think> is open but not yet closed, extract content after <think>
+                    currentThink = openThinkMatch[1].trim();
+                    // Do NOT modify currentContent here. It should still contain the raw <think> tag.
+                  } else {
+                    currentThink = null;
                   }
 
                   currentContent = currentContent.replace(/\*\*/g, "*").trim();
 
                   setMessages((prevMessages) =>
                     prevMessages.map((msg) =>
-                      msg.isUser === false && msg.isStreaming
+                      msg.id === aiMessageId
                         ? {
                             ...msg,
                             content: currentContent,
