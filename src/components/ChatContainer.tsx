@@ -262,9 +262,7 @@ export const ChatContainer: React.FC = () => {
                 if (!thinkMatch) {
                   setMessages((prevMessages) =>
                     prevMessages.map((msg) =>
-                      msg.id === aiMessageId
-                        ? { ...msg, think: null }
-                        : msg
+                      msg.id === aiMessageId ? { ...msg, think: null } : msg
                     )
                   );
                 }

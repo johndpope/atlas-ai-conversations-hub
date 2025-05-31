@@ -8,6 +8,7 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 3000,
+    cleartext: true,
     proxy: {
       '/wp-admin/admin-ajax.php': {
         target: 'https://chatgptdemo.ai',

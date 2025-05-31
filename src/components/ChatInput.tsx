@@ -7,7 +7,10 @@ interface ChatInputProps {
   isLoading: boolean;
 }
 
-export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
+export const ChatInput: React.FC<ChatInputProps> = ({
+  onSendMessage,
+  isLoading,
+}) => {
   const [message, setMessage] = useState("");
 
   const handleSubmit = (e: FormEvent) => {
@@ -18,7 +21,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }
     }
   };
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
@@ -31,14 +34,14 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }
       className="border-t bg-white px-4 py-4 sm:px-6"
     >
       <div className="relative flex items-center">
-        <textarea
-          className="flex-1 resize-none border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 pr-12 h-[56px] max-h-32 overflow-y-auto"
+        <input
+          type="text"
+          className="flex-1 border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 pr-12 h-[56px]"
           placeholder="Digite sua mensagem..."
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={isLoading}
-          rows={1}
         />
         <button
           type="submit"
