@@ -22,6 +22,12 @@ export default defineConfig(({ mode }) => ({
         rewrite: (path) => path.replace(/^\/openai\/v1\/chat\/completions/, '/openai/v1/chat/completions'),
         secure: false,
       },
+      '/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate': {
+        target: 'https://gemini.google.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/_\/BardChatUi\/data\/assistant.lamda.BardFrontendService\/StreamGenerate/, '/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate'),
+        secure: false,
+      },
     },
   },
   plugins: [

@@ -32,12 +32,13 @@ const AI_MODELS: AIModel[] = [
   { id: "maverick", name: "Llama 4 Maverick 17B", maxTokens: 8192 },
   { id: "gemma", name: "Gemma 2 9B", maxTokens: 8192 },
   { id: "gemini", name: "Gemini 2.0 Flash", maxTokens: 8192 },
+  { id: "geminipro", name: "Gemini 1.0 PRO", maxTokens: 8192 },
 ];
 
 export const ChatContainer: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<string>("ChatGpt");
+  const [selectedModel, setSelectedModel] = useState<string>("geminipro");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -85,6 +86,7 @@ export const ChatContainer: React.FC = () => {
         "Content-Type": "application/json",
       };
 
+      // If user choice gemini 2.0 flash
       if (selectedModel === "gemini") {
         const ai = new GoogleGenAI({
           apiKey: geminiKey,
@@ -145,6 +147,7 @@ export const ChatContainer: React.FC = () => {
             );
           }
         }
+        // GPT 4.0 PRO
       } else if (selectedModel === "ChatGpt") {
         const historico = await Api.recuperarMemoria("user");
         const messages = [];
@@ -186,6 +189,79 @@ export const ChatContainer: React.FC = () => {
           isStreaming: false,
         };
         setMessages((prevMessages) => [...prevMessages, newAiMessage]);
+        // GEMINI 1.0 PRO
+      } else if (selectedModel === "geminipro") {
+        const url =
+          "/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate";
+
+        const headers = {
+          accept: "*/*",
+          "accept-language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+          "content-type": "application/x-www-form-urlencoded;charset=UTF-8",
+          priority: "u=1, i",
+          "x-client-data":
+            "CIa2yQEIorbJAQipncoBCIL8ygEIlqHLAQiSo8sBCIegzQEI/qXOAQjF7c4BCN3uzgEIrvHOAQiR8s4B",
+          "x-goog-ext-525001261-jspb": '[1,null,null,null,"9ec249fc9ad08861"]',
+          "x-same-domain": "1",
+        };
+
+        const data = new URLSearchParams({
+          "f.req": `[null,"[[\\"${content}\\",0,null,null,null,null,0],[\\"pt-BR\\"],[\\"c_86f16514538a5842\\",\\"r_ae12e9cacac65dbb\\",\\"rc_66b426255e672d34\\",null,null,null,null,null,null,\\"\\"],\\"!BAelB1_NAA...<ENCURTADO>...\\"]"]`,
+        });
+        
+        const response = await fetch(
+          `${url}?bl=boq_assistant-bard-web-server_20250528.04_p1&f.sid=8894552805453950559&hl=pt-BR&_reqid=2558540&rt=c`,
+          {
+            method: "POST",
+            headers,
+            body: data,
+          }
+        );
+
+        const text = await response.text();
+
+        const lines = text.split("\n");
+        const jsonLine = lines.find((line) => line.startsWith("[["));
+        if (!jsonLine) {
+          console.log("Não encontrei linha JSON da resposta");
+          return;
+        }
+
+        const outerJson = JSON.parse(jsonLine);
+        const innerJsonStr = outerJson[0][2];
+        const innerJson = JSON.parse(innerJsonStr);
+
+        function procuraRC(obj) {
+          if (Array.isArray(obj)) {
+            if (
+              obj.length > 0 &&
+              typeof obj[0] === "string" &&
+              obj[0].startsWith("rc_")
+            ) {
+              if (Array.isArray(obj[1]) && obj[1].length > 0) {
+                return obj[1][0];
+              }
+            }
+            for (const item of obj) {
+              const res = procuraRC(item);
+              if (res) return res;
+            }
+          }
+          return null;
+        }
+
+        resposta = procuraRC(innerJson);
+
+        const newAiMessage = {
+          id: (Date.now() + 1).toString(),
+          content: resposta,
+          isUser: false,
+          think: null,
+          isStreaming: false,
+        };
+        setMessages((prevMessages) => [...prevMessages, newAiMessage]);
+
+        // GROQ's MODELS
       } else {
         const modelMapping = {
           qwen: "qwen-qwq-32b",
