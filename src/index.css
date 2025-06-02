@@ -139,6 +139,14 @@
 }
 
 /* Estilos para blocos de código */
+html,
+body {
+  overflow-x: hidden;
+}
+
+body {
+  position: relative;
+}
 .code-block {
   border-radius: 0.375rem;
   overflow: hidden;

@@ -161,7 +161,7 @@ export const ChatContainer: React.FC = () => {
         const url = "/wp-admin/admin-ajax.php";
 
         const formData = new FormData();
-        formData.append("_wpnonce", "a581e7ac21");
+        formData.append("_wpnonce", "21a8d2df27");
         formData.append("post_id", "5551");
         formData.append("url", "https://chatgptdemo.ai/chat");
         formData.append("action", "wpaicg_chat_shortcode_message");
