@@ -33,6 +33,12 @@ export default defineConfig(({ mode }) => ({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/novita\/v3\/openai\/chat\/completions/, '/novita/v3/openai/chat/completions'),
         secure: false,
+      },
+      "/fireworks-ai/inference/v1/chat/completions": {
+        target: "https://router.huggingface.co",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/fireworks-ai\/inference\/v1\/chat\/completions/, '/fireworks-ai/inference/v1/chat/completions'),
+        secure: false,
       }
     },
   },
