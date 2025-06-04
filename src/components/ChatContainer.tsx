@@ -42,12 +42,13 @@ const AI_MODELS: AIModel[] = [
   { id: "geminipro", name: "Gemini 1.5 PRO", maxTokens: 8192 },
   { id: "deepseekr1turbo", name: "DeepSeek R1 turbo", maxTokens: 131072 },
   { id: "deepseekv3", name: "DeepSeek V3", maxTokens: 131072 },
+  { id: "deepseekqwen8b", name: "DeepSeek Qwen 8b", maxTokens: 131072 },
 ];
 
 export const ChatContainer: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<string>("deepseekv3");
+  const [selectedModel, setSelectedModel] = useState<string>("geminipro");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -95,7 +96,7 @@ export const ChatContainer: React.FC = () => {
         "Content-Type": "application/json",
       };
 
-      // If user choice gemini 2.0 flash
+      //gemini 2.0 flash
       if (selectedModel === "gemini") {
         const ai = new GoogleGenAI({
           apiKey: geminiKey,
@@ -176,6 +177,142 @@ export const ChatContainer: React.FC = () => {
           messages: messages,
           stream: true,
           model: "accounts/fireworks/models/deepseek-v3",
+        };
+
+        const response = await fetch(url, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(data),
+        });
+
+        const aiMessageId = (Date.now() + 1).toString();
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          {
+            id: aiMessageId,
+            content: "",
+            isUser: false,
+            think: null,
+            isStreaming: true,
+          },
+        ]);
+
+        // Set isLoading to false once streaming starts
+        setIsLoading(false);
+
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
+
+        if (!reader) throw new Error("Failed to get response reader");
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split("\n").filter((line) => line.trim() !== "");
+
+          for (const line of lines) {
+            if (line.startsWith("data: ")) {
+              const data = line.slice(6);
+              if (data === "[DONE]") {
+                const thinkTagRegex = /<think>(.*?)<\/think>/s;
+                const thinkMatch = resposta.match(thinkTagRegex);
+                const currentThink = thinkMatch ? thinkMatch[1].trim() : null;
+                let currentContent = resposta; // Start with the full response
+
+                if (thinkMatch) {
+                  currentContent = resposta.replace(thinkTagRegex, ""); // Remove full tag from main content
+                }
+
+                currentContent = currentContent.replace(/\*\*/g, "*").trim();
+
+                // Ensure think is null when stream is done and no think tag is present
+                if (!thinkMatch) {
+                  setMessages((prevMessages) =>
+                    prevMessages.map((msg) =>
+                      msg.id === aiMessageId ? { ...msg, think: null } : msg
+                    )
+                  );
+                }
+
+                setMessages((prevMessages) =>
+                  prevMessages.map((msg) =>
+                    msg.id === aiMessageId
+                      ? {
+                          ...msg,
+                          content: currentContent,
+                          think: currentThink,
+                          isStreaming: false,
+                        }
+                      : msg
+                  )
+                );
+                break;
+              }
+
+              try {
+                const parsed = JSON.parse(data);
+                if (parsed.choices?.[0]?.delta?.content) {
+                  resposta += parsed.choices[0].delta.content;
+                  let currentContent = resposta;
+                  let currentThink = null;
+
+                  const fullThinkTagRegex = /<think>(.*?)<\/think>/s;
+                  const openThinkTagRegex = /<think>(.*)/s; // Capture everything after <think>
+
+                  const fullThinkMatch = resposta.match(fullThinkTagRegex);
+                  const openThinkMatch = resposta.match(openThinkTagRegex);
+
+                  if (fullThinkMatch) {
+                    currentThink = fullThinkMatch[1].trim();
+                    currentContent = resposta.replace(fullThinkTagRegex, ""); // Remove full tag from main content
+                  } else if (openThinkMatch) {
+                    // If <think> is open but not yet closed, extract content after <think>
+                    currentThink = openThinkMatch[1].trim();
+                    // Remove the open <think> tag and its content from the main content
+                    currentContent = resposta.replace(openThinkTagRegex, "");
+                  } else {
+                    currentThink = null;
+                    // If no <think> tag is present, the full response is the content
+                    currentContent = resposta;
+                  }
+
+                  currentContent = currentContent.replace(/\*\*/g, "*").trim();
+
+                  setMessages((prevMessages) =>
+                    prevMessages.map((msg) =>
+                      msg.id === aiMessageId
+                        ? {
+                            ...msg,
+                            content: currentContent,
+                            think: currentThink,
+                            isStreaming: true,
+                          }
+                        : msg
+                    )
+                  );
+                }
+              } catch (e) {
+                console.error("Error parsing SSE:", e);
+              }
+            }
+          }
+        }
+
+        // DEEPSEEK QWEN
+      } else if (selectedModel === "deepseekqwen8b") {
+        const url = "/novita/v3/openai/chat/completions";
+
+        const headers = {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + huggfaceKey,
+        };
+
+        const data = {
+          messages: messages,
+          stream: true,
+          model: "deepseek/deepseek-r1-0528-qwen3-8b",
         };
 
         const response = await fetch(url, {
