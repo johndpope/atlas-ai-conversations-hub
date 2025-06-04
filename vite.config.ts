@@ -28,6 +28,12 @@ export default defineConfig(({ mode }) => ({
         rewrite: (path) => path.replace(/^\/_\/BardChatUi\/data\/assistant.lamda.BardFrontendService\/StreamGenerate/, '/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate'),
         secure: false,
       },
+      "/novita/v3/openai/chat/completions": {
+        target: "https://router.huggingface.co",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/novita\/v3\/openai\/chat\/completions/, '/novita/v3/openai/chat/completions'),
+        secure: false,
+      }
     },
   },
   plugins: [

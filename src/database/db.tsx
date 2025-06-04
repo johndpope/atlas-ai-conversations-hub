@@ -36,7 +36,7 @@ export class Api {
   }
 
   // Recuperar últimas mensagens
-  static async recuperarMemoria(usuario: string, limite = 100): Promise<Omit<Memoria, 'id'>[]> {
+  static async recuperarMemoria(usuario: string, limite = 10): Promise<Omit<Memoria, 'id'>[]> {
     const rows = await db.memoria
       .where('usuario')
       .equals(usuario)
