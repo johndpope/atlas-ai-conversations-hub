@@ -1,21 +1,22 @@
-
 import React, { useState, FormEvent, KeyboardEvent } from "react";
 import { Send } from "lucide-react";
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
-  isLoading: boolean;
+  className?: string;
+  isLoading?: boolean;
 }
 
 export const ChatInput: React.FC<ChatInputProps> = ({
   onSendMessage,
-  isLoading,
+  className,
+  isLoading = false,
 }) => {
   const [message, setMessage] = useState("");
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (message && !isLoading) {
+    if (message.trim()) {
       onSendMessage(message);
       setMessage("");
     }
@@ -31,7 +32,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   return (
     <form
       onSubmit={handleSubmit}
-      className="border-t bg-white px-4 py-4 sm:px-6"
+      className={`fixed bottom-0 left-0 right-0 border-t bg-white px-4 py-4 sm:px-6 ${
+        className || ""
+      }`}
     >
       <div className="relative flex items-center">
         <input
@@ -46,7 +49,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         <button
           type="submit"
           className={`absolute right-3 rounded-md p-2 ${
-            message && !isLoading
+            message.trim() && !isLoading
               ? "chat-gradient text-white"
               : "bg-gray-200 text-gray-400"
           }`}

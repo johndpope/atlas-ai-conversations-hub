@@ -12,6 +12,7 @@ import { ChatInput } from "./ChatInput";
 import { ThinkingIndicator } from "./ThinkingIndicator";
 import { WelcomeMessage } from "./WelcomeMessage";
 import { useToast } from "@/components/ui/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Api } from "../database/db";
 import { apiKeyGroq, geminiKey, huggfaceKey } from "../../variables.json";
 import { GoogleGenAI } from "@google/genai";
@@ -46,6 +47,7 @@ const AI_MODELS: AIModel[] = [
 ];
 
 export const ChatContainer: React.FC = () => {
+  const isMobile = useIsMobile();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedModel, setSelectedModel] = useState<string>("geminipro");
@@ -591,7 +593,7 @@ export const ChatContainer: React.FC = () => {
         formData.append("url", "https://chatgptdemo.ai/chat");
         formData.append("action", "wpaicg_chat_shortcode_message");
         formData.append("message", content);
-        formData.append("bot_id", "0");
+        formData.append("bot_id", "1");
         formData.append("chatbot_identity", "shortcode");
         formData.append("wpaicg_chat_history", JSON.stringify(messages));
         formData.append("wpaicg_chat_client_id", "user");
@@ -847,9 +849,17 @@ export const ChatContainer: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
-      <ChatHeader />
-      <div className="bg-white p-4 shadow-sm">
+    <div
+      className={`flex flex-col h-screen bg-gray-50 ${isMobile ? "pt-32" : ""}`}
+    >
+      <ChatHeader
+        className={isMobile ? "fixed top-0 left-0 right-0 z-10 bg-white" : ""}
+      />
+      <div
+        className={`bg-white p-4 shadow-sm ${
+          isMobile ? "fixed top-16 left-0 right-0 z-10" : ""
+        }`}
+      >
         <Select onValueChange={setSelectedModel} value={selectedModel}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Select a model" />
@@ -879,10 +889,12 @@ export const ChatContainer: React.FC = () => {
             ))}
             {isLoading && <ThinkingIndicator />}
             <div ref={messagesEndRef} />
+            <div className="pb-[200px]" />{" "}
+            {/* Aumenta o padding para o input */}
           </div>
         )}
       </div>
-      <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
+      <ChatInput onSendMessage={handleSendMessage} />
     </div>
   );
 };
