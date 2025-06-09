@@ -1,4 +1,5 @@
 {
   "apiKeyGroq": "your-api-key-here",
-  "geminiKey": "your-api-key-here-gemini"
+  "geminiKey": "your-api-key-here-gemini",
+  "huggfaceKey": "your-api-key-here-huggingface"
 }
