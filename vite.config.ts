@@ -39,6 +39,12 @@ export default defineConfig(({ mode }) => ({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/fireworks-ai\/inference\/v1\/chat\/completions/, '/fireworks-ai/inference/v1/chat/completions'),
         secure: false,
+      },
+      "/hyperbolic/v1/chat/completions": {
+        target: "https://router.huggingface.co",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/hyperbolic\/v1\/chat\/completions/, '/hyperbolic/v1/chat/completions'),
+        secure: false,
       }
     },
   },

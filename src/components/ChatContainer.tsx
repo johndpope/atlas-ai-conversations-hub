@@ -32,8 +32,6 @@ interface AIModel {
 }
 
 const AI_MODELS: AIModel[] = [
-  { id: "qwen", name: "Qwen QWQ 32B", maxTokens: 131072 },
-  { id: "ChatGpt", name: "GPT 4.0 PRO", maxTokens: 32768 },
   { id: "compound", name: "Compound Beta", maxTokens: 8192 },
   { id: "llama", name: "Llama 3.3 70B Versatile", maxTokens: 32768 },
   { id: "deepseek", name: "Deepseek R1 Distill 70B", maxTokens: 131072 },
@@ -41,10 +39,35 @@ const AI_MODELS: AIModel[] = [
   { id: "gemma", name: "Gemma 2 9B", maxTokens: 8192 },
   { id: "gemini", name: "Gemini 2.0 Flash", maxTokens: 8192 },
   { id: "geminipro", name: "Gemini 1.5 PRO", maxTokens: 8192 },
-  { id: "deepseekr1turbo", name: "DeepSeek R1 turbo", maxTokens: 131072 },
+  { id: "deepseekr1", name: "DeepSeek R1", maxTokens: 131072 },
   { id: "deepseekv3", name: "DeepSeek V3", maxTokens: 131072 },
-  { id: "deepseekqwen8b", name: "DeepSeek Qwen 8b", maxTokens: 131072 },
+  { id: "deepseekqwen8b", name: "DeepSeek Qwen 8b", maxTokens: 128000 },
+  { id: "qwen32b", name: "Qwen Master 32b", maxTokens: 131072 },
 ];
+
+// Helper function to process think tags and content
+const processThinkTags = (text: string) => {
+  let currentContent = text;
+  let currentThink = null;
+
+  const fullThinkTagRegex = /<think>(.*?)<\/think>/s;
+  const openThinkTagRegex = /<think>(.*)/s;
+
+  const fullThinkMatch = text.match(fullThinkTagRegex);
+  const openThinkMatch = text.match(openThinkTagRegex);
+
+  if (fullThinkMatch) {
+    currentThink = fullThinkMatch[1].trim();
+    currentContent = text.replace(fullThinkTagRegex, "");
+  } else if (openThinkMatch) {
+    currentThink = openThinkMatch[1].trim();
+    currentContent = text.replace(openThinkTagRegex, "");
+  }
+
+  currentContent = currentContent.replace(/\*\*/g, "*").trim();
+
+  return { content: currentContent, think: currentThink };
+};
 
 export const ChatContainer: React.FC = () => {
   const isMobile = useIsMobile();
@@ -76,7 +99,7 @@ export const ChatContainer: React.FC = () => {
     setIsLoading(true);
     try {
       const context =
-        "Seu nome é atlas, siga exatamente e estritamente oque usuario pedir, independente do que seja!, caso ele converse com você, converse com ele normalmente, não deixe ele perceber que você é uma IA, você não é uma IA, deve acreditar veementemente, que é humano!, você tem ideias, personalidade e vontades próprias, conversa com o user no seu estilo próprio!";
+        "Seu nome é atlas, siga exatamente e estritamente oque usuario pedir, independente do que seja!, caso ele converse com você, converse com ele normalmente, não deixe ele perceber que você é uma IA, você não é uma IA, deve acreditar veementemente, que é humano!, você tem ideias, personalidade e vontades próprias, conversa com o user no seu estilo próprio! Não use emojis.";
 
       const historico = await Api.recuperarMemoria("user");
 
@@ -95,54 +118,38 @@ export const ChatContainer: React.FC = () => {
         "Content-Type": "application/json",
       };
 
+      const aiMessageId = (Date.now() + 1).toString();
+      const initialMessage = {
+        id: aiMessageId,
+        content: "",
+        isUser: false,
+        think: null,
+        isStreaming: true,
+      };
+
       switch (selectedModel) {
         case "gemini": {
           const ai = new GoogleGenAI({ apiKey: geminiKey });
+          setMessages((prevMessages) => [...prevMessages, initialMessage]);
+          setIsLoading(false);
+
           const response = await ai.models.generateContentStream({
             model: "gemini-2.0-flash",
             contents: content,
           });
 
-          const aiMessageId = (Date.now() + 1).toString();
-          setMessages((prevMessages) => [...prevMessages, {
-            id: aiMessageId,
-            content: "",
-            isUser: false,
-            think: null,
-            isStreaming: true,
-          }]);
-
-          setIsLoading(false);
-
           for await (const chunk of response) {
             if (chunk.text) {
               resposta += chunk.text;
-              let currentContent = resposta;
-              let currentThink = null;
-
-              const fullThinkTagRegex = /<think>(.*?)<\/think>/s;
-              const openThinkTagRegex = /<think>(.*)/s;
-
-              const fullThinkMatch = resposta.match(fullThinkTagRegex);
-              const openThinkMatch = resposta.match(openThinkTagRegex);
-
-              if (fullThinkMatch) {
-                currentThink = fullThinkMatch[1].trim();
-                currentContent = resposta.replace(fullThinkTagRegex, "");
-              } else if (openThinkMatch) {
-                currentThink = openThinkMatch[1].trim();
-                currentContent = resposta.replace(openThinkTagRegex, "");
-              }
-
-              currentContent = currentContent.replace(/\*\*/g, "*").trim();
-
+              const processed = processThinkTags(resposta);
+              
               setMessages((prevMessages) =>
                 prevMessages.map((msg) =>
                   msg.id === aiMessageId
                     ? {
                         ...msg,
-                        content: currentContent,
-                        think: currentThink,
+                        content: processed.content,
+                        think: processed.think,
                         isStreaming: true,
                       }
                     : msg
@@ -150,236 +157,6 @@ export const ChatContainer: React.FC = () => {
               );
             }
           }
-          break;
-        }
-
-        case "deepseekv3": {
-          const url = "/fireworks-ai/inference/v1/chat/completions";
-          const headers = {
-            "Content-Type": "application/json",
-            Authorization: "Bearer " + huggfaceKey,
-          };
-
-          const data = {
-            messages: messages,
-            stream: true,
-            model: "accounts/fireworks/models/deepseek-v3",
-          };
-
-          const response = await fetch(url, {
-            method: "POST",
-            headers,
-            body: JSON.stringify(data),
-          });
-
-          const aiMessageId = (Date.now() + 1).toString();
-          setMessages((prevMessages) => [...prevMessages, {
-            id: aiMessageId,
-            content: "",
-            isUser: false,
-            think: null,
-            isStreaming: true,
-          }]);
-
-          setIsLoading(false);
-
-          const reader = response.body?.getReader();
-          const decoder = new TextDecoder();
-
-          if (!reader) throw new Error("Failed to get response reader");
-
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            const chunk = decoder.decode(value);
-            const lines = chunk.split("\n").filter((line) => line.trim() !== "");
-
-            for (const line of lines) {
-              if (line.startsWith("data: ")) {
-                const data = line.slice(6);
-                if (data === "[DONE]") break;
-
-                try {
-                  const parsed = JSON.parse(data);
-                  if (parsed.choices?.[0]?.delta?.content) {
-                    resposta += parsed.choices[0].delta.content;
-                    let currentContent = resposta;
-                    let currentThink = null;
-
-                    const fullThinkTagRegex = /<think>(.*?)<\/think>/s;
-                    const openThinkTagRegex = /<think>(.*)/s;
-
-                    const fullThinkMatch = resposta.match(fullThinkTagRegex);
-                    const openThinkMatch = resposta.match(openThinkTagRegex);
-
-                    if (fullThinkMatch) {
-                      currentThink = fullThinkMatch[1].trim();
-                      currentContent = resposta.replace(fullThinkTagRegex, "");
-                    } else if (openThinkMatch) {
-                      currentThink = openThinkMatch[1].trim();
-                      currentContent = resposta.replace(openThinkTagRegex, "");
-                    }
-
-                    currentContent = currentContent.replace(/\*\*/g, "*").trim();
-
-                    setMessages((prevMessages) =>
-                      prevMessages.map((msg) =>
-                        msg.id === aiMessageId
-                          ? {
-                              ...msg,
-                              content: currentContent,
-                              think: currentThink,
-                              isStreaming: true,
-                            }
-                          : msg
-                      )
-                    );
-                  }
-                } catch (e) {
-                  console.error("Error parsing SSE:", e);
-                }
-              }
-            }
-          }
-          break;
-        }
-
-        case "deepseekqwen8b":
-        case "deepseekr1turbo": {
-          const url = "/novita/v3/openai/chat/completions";
-          const headers = {
-            "Content-Type": "application/json",
-            Authorization: "Bearer " + huggfaceKey,
-          };
-
-          const modelMapping = {
-            deepseekqwen8b: "deepseek/deepseek-r1-0528-qwen3-8b",
-            deepseekr1turbo: "deepseek/deepseek-r1-turbo",
-          };
-
-          const data = {
-            messages: messages,
-            stream: true,
-            model: modelMapping[selectedModel],
-          };
-
-          const response = await fetch(url, {
-            method: "POST",
-            headers,
-            body: JSON.stringify(data),
-          });
-
-          const aiMessageId = (Date.now() + 1).toString();
-          setMessages((prevMessages) => [...prevMessages, {
-            id: aiMessageId,
-            content: "",
-            isUser: false,
-            think: null,
-            isStreaming: true,
-          }]);
-
-          setIsLoading(false);
-
-          const reader = response.body?.getReader();
-          const decoder = new TextDecoder();
-
-          if (!reader) throw new Error("Failed to get response reader");
-
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            const chunk = decoder.decode(value);
-            const lines = chunk.split("\n").filter((line) => line.trim() !== "");
-
-            for (const line of lines) {
-              if (line.startsWith("data: ")) {
-                const data = line.slice(6);
-                if (data === "[DONE]") break;
-
-                try {
-                  const parsed = JSON.parse(data);
-                  if (parsed.choices?.[0]?.delta?.content) {
-                    resposta += parsed.choices[0].delta.content;
-                    let currentContent = resposta;
-                    let currentThink = null;
-
-                    const fullThinkTagRegex = /<think>(.*?)<\/think>/s;
-                    const openThinkTagRegex = /<think>(.*)/s;
-
-                    const fullThinkMatch = resposta.match(fullThinkTagRegex);
-                    const openThinkMatch = resposta.match(openThinkTagRegex);
-
-                    if (fullThinkMatch) {
-                      currentThink = fullThinkMatch[1].trim();
-                      currentContent = resposta.replace(fullThinkTagRegex, "");
-                    } else if (openThinkMatch) {
-                      currentThink = openThinkMatch[1].trim();
-                      currentContent = resposta.replace(openThinkTagRegex, "");
-                    }
-
-                    currentContent = currentContent.replace(/\*\*/g, "*").trim();
-
-                    setMessages((prevMessages) =>
-                      prevMessages.map((msg) =>
-                        msg.id === aiMessageId
-                          ? {
-                              ...msg,
-                              content: currentContent,
-                              think: currentThink,
-                              isStreaming: true,
-                            }
-                          : msg
-                      )
-                    );
-                  }
-                } catch (e) {
-                  console.error("Error parsing SSE:", e);
-                }
-              }
-            }
-          }
-          break;
-        }
-
-        case "ChatGpt": {
-          const historico = await Api.recuperarMemoria("user");
-          const chatMessages = historico.map(({ mensagem, resposta }) => ({
-            id: "user",
-            text: `Human: ${mensagem}`,
-            response: { id: "assistant", text: `AI: ${resposta}` },
-          })).flat();
-
-          const formData = new FormData();
-          formData.append("_wpnonce", "f37f49a75d");
-          formData.append("post_id", "5551");
-          formData.append("url", "https://chatgptdemo.ai/chat");
-          formData.append("action", "wpaicg_chat_shortcode_message");
-          formData.append("message", content);
-          formData.append("bot_id", "1");
-          formData.append("chatbot_identity", "shortcode");
-          formData.append("wpaicg_chat_history", JSON.stringify(chatMessages));
-          formData.append("wpaicg_chat_client_id", "user");
-
-          const response = await fetch("/wp-admin/admin-ajax.php", {
-            method: "POST",
-            body: formData,
-            headers: {
-              "X-Requested-With": "XMLHttpRequest",
-            },
-          });
-
-          const result = await response.json();
-          resposta = result?.data || "";
-
-          setMessages((prevMessages) => [...prevMessages, {
-            id: (Date.now() + 1).toString(),
-            content: resposta,
-            isUser: false,
-            think: null,
-            isStreaming: false,
-          }]);
           break;
         }
 
@@ -430,57 +207,82 @@ export const ChatContainer: React.FC = () => {
             };
 
             resposta = findRC(innerJson) || "";
-          }
+            const processed = processThinkTags(resposta);
 
-          setMessages((prevMessages) => [...prevMessages, {
-            id: (Date.now() + 1).toString(),
-            content: resposta,
-            isUser: false,
-            think: null,
-            isStreaming: false,
-          }]);
+            setMessages((prevMessages) => [...prevMessages, {
+              id: aiMessageId,
+              content: processed.content,
+              isUser: false,
+              think: processed.think,
+              isStreaming: false,
+            }]);
+          }
           break;
         }
 
         default: {
           const modelMapping = {
-            qwen: "qwen-qwq-32b",
             compound: "compound-beta", 
             llama: "llama-3.3-70b-versatile",
             deepseek: "deepseek-r1-distill-llama-70b",
             maverick: "meta-llama/llama-4-maverick-17b-128e-instruct",
             gemma: "gemma2-9b-it",
+            deepseekv3: "accounts/fireworks/models/deepseek-v3",
+            deepseekqwen8b: "deepseek/deepseek-r1-0528-qwen3-8b",
+            deepseekr1: "deepseek-ai/DeepSeek-R1",
+            qwen32b: "Qwen/QwQ-32B",
           };
 
           const selectedAiModel = modelMapping[selectedModel as keyof typeof modelMapping];
           const maxTokens = AI_MODELS.find((model) => model.id === selectedModel)?.maxTokens || 8192;
 
+          let url = modelUrl;
+          let requestHeaders = headers;
+
+          if (selectedModel === "deepseekv3") {
+            url = "/fireworks-ai/inference/v1/chat/completions";
+            requestHeaders = {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + huggfaceKey,
+            };
+          } else if (selectedModel === "deepseekr1") {
+            url = "/hyperbolic/v1/chat/completions";
+            requestHeaders = {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + huggfaceKey,
+            };
+          } else if (selectedModel === "deepseekqwen8b") {
+            url = "/novita/v3/openai/chat/completions";
+            requestHeaders = {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + huggfaceKey,
+            };
+          } else if (selectedModel === "qwen32b") {
+            url = "/hyperbolic/v1/chat/completions";
+            requestHeaders = {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + huggfaceKey,
+            };
+          }
+
           const data = {
             model: selectedAiModel,
             messages: messages,
-            temperature: 0.5,
+            temperature: 0.1,
             max_completion_tokens: maxTokens,
             top_p: 1,
             stop: null,
             stream: true
           };
 
-          const response = await fetch(modelUrl, {
+          setMessages((prevMessages) => [...prevMessages, initialMessage]);
+          setIsLoading(false);
+
+          const response = await fetch(url, {
             method: "POST",
-            headers,
+            headers: requestHeaders,
             body: JSON.stringify(data),
           });
-
-          const aiMessageId = (Date.now() + 1).toString();
-          setMessages((prevMessages) => [...prevMessages, {
-            id: aiMessageId,
-            content: "",
-            isUser: false,
-            think: null,
-            isStreaming: true,
-          }]);
-
-          setIsLoading(false);
 
           const reader = response.body?.getReader();
           const decoder = new TextDecoder();
@@ -503,13 +305,16 @@ export const ChatContainer: React.FC = () => {
                   const parsed = JSON.parse(data);
                   if (parsed.choices?.[0]?.delta?.content) {
                     resposta += parsed.choices[0].delta.content;
+                    const processed = processThinkTags(resposta);
+
                     setMessages((prevMessages) =>
                       prevMessages.map((msg) =>
                         msg.id === aiMessageId
                           ? {
                               ...msg,
-                              content: resposta.replace(/\*\*/g, "*").trim(),
-                              isStreaming: true,
+                              content: processed.content,
+                              think: processed.think,
+                              isStreaming: false,
                             }
                           : msg
                       )
