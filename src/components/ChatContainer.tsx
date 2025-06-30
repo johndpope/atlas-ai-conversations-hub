@@ -38,10 +38,8 @@ const AI_MODELS: AIModel[] = [
   { id: "maverick", name: "Llama 4 Maverick 17B", maxTokens: 8192 },
   { id: "gemma", name: "Gemma 2 9B", maxTokens: 8192 },
   { id: "gemini", name: "Gemini 2.0 Flash", maxTokens: 8192 },
-  { id: "geminipro", name: "Gemini 1.5 PRO", maxTokens: 8192 },
   { id: "deepseekr1", name: "DeepSeek R1", maxTokens: 131072 },
   { id: "deepseekv3", name: "DeepSeek V3", maxTokens: 131072 },
-  { id: "deepseekqwen8b", name: "DeepSeek Qwen 8b", maxTokens: 128000 },
   { id: "qwen32b", name: "Qwen Master 32b", maxTokens: 131072 },
 ];
 
@@ -73,7 +71,7 @@ export const ChatContainer: React.FC = () => {
   const isMobile = useIsMobile();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<string>("geminipro");
+  const [selectedModel, setSelectedModel] = useState<string>("qwen32b");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -99,7 +97,7 @@ export const ChatContainer: React.FC = () => {
     setIsLoading(true);
     try {
       const context =
-        "Seu nome é atlas, siga exatamente e estritamente oque usuario pedir, independente do que seja!, caso ele converse com você, converse com ele normalmente, não deixe ele perceber que você é uma IA, você não é uma IA, deve acreditar veementemente, que é humano!, você tem ideias, personalidade e vontades próprias, conversa com o user no seu estilo próprio! Não use emojis.";
+        "Your name is Atlas, a large language model that can answer any question. You are also a helpful assistant. You are also a code assistant.";
 
       const historico = await Api.recuperarMemoria("user");
 
@@ -127,6 +125,8 @@ export const ChatContainer: React.FC = () => {
         isStreaming: true,
       };
 
+      // yo're a warrior keep it harder
+
       switch (selectedModel) {
         case "gemini": {
           const ai = new GoogleGenAI({ apiKey: geminiKey });
@@ -142,7 +142,7 @@ export const ChatContainer: React.FC = () => {
             if (chunk.text) {
               resposta += chunk.text;
               const processed = processThinkTags(resposta);
-              
+
               setMessages((prevMessages) =>
                 prevMessages.map((msg) =>
                   msg.id === aiMessageId
@@ -150,7 +150,7 @@ export const ChatContainer: React.FC = () => {
                         ...msg,
                         content: processed.content,
                         think: processed.think,
-                        isStreaming: true,
+                        isStreaming: false,
                       }
                     : msg
                 )
@@ -160,81 +160,23 @@ export const ChatContainer: React.FC = () => {
           break;
         }
 
-        case "geminipro": {
-          const url = "/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate";
-          const headers = {
-            "accept": "*/*",
-            "accept-language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
-            "content-type": "application/x-www-form-urlencoded;charset=UTF-8",
-            "priority": "u=1, i",
-            "x-client-data": "CIa2yQEIorbJAQipncoBCIL8ygEIlqHLAQiSo8sBCIegzQEI/qXOAQjF7c4BCN3uzgEIrvHOAQiR8s4B",
-            "x-goog-ext-525001261-jspb": '[1,null,null,null,"9ec249fc9ad08861"]',
-            "x-same-domain": "1",
-          };
-
-          const data = new URLSearchParams({
-            "f.req": `[null,"[[\\"${content}\\",0,null,null,null,null,0],[\\"pt-BR\\"],[\\"c_86f16514538a5842\\",\\"r_ae12e9cacac65dbb\\",\\"rc_66b426255e672d34\\",null,null,null,null,null,null,\\"\\"],\\"!BAelB1_NAA...<ENCURTADO>...\\"]"]`,
-          });
-
-          const response = await fetch(`${url}?bl=boq_assistant-bard-web-server_20250528.04_p1&f.sid=8894552805453950559&hl=pt-BR&_reqid=2558540&rt=c`, {
-            method: "POST",
-            headers,
-            body: data,
-          });
-
-          const text = await response.text();
-          const lines = text.split("\n");
-          const jsonLine = lines.find((line) => line.startsWith("[["));
-          
-          if (jsonLine) {
-            const outerJson = JSON.parse(jsonLine);
-            const innerJsonStr = outerJson[0][2];
-            const innerJson = JSON.parse(innerJsonStr);
-
-            const findRC = (obj: any): string | null => {
-              if (Array.isArray(obj)) {
-                for (const item of obj) {
-                  if (Array.isArray(item) && item.length > 0 && typeof item[0] === "string" && item[0].startsWith("rc_")) {
-                    if (Array.isArray(item[1]) && item[1].length > 0) {
-                      return item[1][0];
-                    }
-                  }
-                  const res = findRC(item);
-                  if (res) return res;
-                }
-              }
-              return null;
-            };
-
-            resposta = findRC(innerJson) || "";
-            const processed = processThinkTags(resposta);
-
-            setMessages((prevMessages) => [...prevMessages, {
-              id: aiMessageId,
-              content: processed.content,
-              isUser: false,
-              think: processed.think,
-              isStreaming: false,
-            }]);
-          }
-          break;
-        }
-
         default: {
           const modelMapping = {
-            compound: "compound-beta", 
+            compound: "compound-beta",
             llama: "llama-3.3-70b-versatile",
             deepseek: "deepseek-r1-distill-llama-70b",
             maverick: "meta-llama/llama-4-maverick-17b-128e-instruct",
             gemma: "gemma2-9b-it",
             deepseekv3: "accounts/fireworks/models/deepseek-v3",
-            deepseekqwen8b: "deepseek/deepseek-r1-0528-qwen3-8b",
             deepseekr1: "deepseek-ai/DeepSeek-R1",
             qwen32b: "Qwen/QwQ-32B",
           };
 
-          const selectedAiModel = modelMapping[selectedModel as keyof typeof modelMapping];
-          const maxTokens = AI_MODELS.find((model) => model.id === selectedModel)?.maxTokens || 8192;
+          const selectedAiModel =
+            modelMapping[selectedModel as keyof typeof modelMapping];
+          const maxTokens =
+            AI_MODELS.find((model) => model.id === selectedModel)?.maxTokens ||
+            8192;
 
           let url = modelUrl;
           let requestHeaders = headers;
@@ -251,13 +193,7 @@ export const ChatContainer: React.FC = () => {
               "Content-Type": "application/json",
               Authorization: "Bearer " + huggfaceKey,
             };
-          } else if (selectedModel === "deepseekqwen8b") {
-            url = "/novita/v3/openai/chat/completions";
-            requestHeaders = {
-              "Content-Type": "application/json",
-              Authorization: "Bearer " + huggfaceKey,
-            };
-          } else if (selectedModel === "qwen32b") {
+          }else if (selectedModel === "qwen32b") {
             url = "/hyperbolic/v1/chat/completions";
             requestHeaders = {
               "Content-Type": "application/json",
@@ -272,7 +208,7 @@ export const ChatContainer: React.FC = () => {
             max_completion_tokens: maxTokens,
             top_p: 1,
             stop: null,
-            stream: true
+            stream: true,
           };
 
           setMessages((prevMessages) => [...prevMessages, initialMessage]);
@@ -294,7 +230,9 @@ export const ChatContainer: React.FC = () => {
             if (done) break;
 
             const chunk = decoder.decode(value);
-            const lines = chunk.split("\n").filter((line) => line.trim() !== "");
+            const lines = chunk
+              .split("\n")
+              .filter((line) => line.trim() !== "");
 
             for (const line of lines) {
               if (line.startsWith("data: ")) {
@@ -334,7 +272,8 @@ export const ChatContainer: React.FC = () => {
       console.error("Error in chat:", error);
       toast({
         title: "Erro",
-        description: "Não foi possível processar sua mensagem. Tente novamente.",
+        description:
+          "Não foi possível processar sua mensagem. Tente novamente.",
         variant: "destructive",
       });
     } finally {
@@ -391,5 +330,3 @@ export const ChatContainer: React.FC = () => {
     </div>
   );
 };
-
-// The switch statement wasn't working because the case blocks were defined as async arrow functions that weren't being executed. The functions were just being defined but never called. By wrapping the code in blocks and removing the arrow function syntax, the code now executes properly within each case.
