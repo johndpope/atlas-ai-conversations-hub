@@ -60,7 +60,9 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
           a: ({ node, ...props }) => (
             <a
               className={`underline ${
-                isUser ? "text-blue-300 hover:text-blue-100" : "text-blue-600 hover:text-blue-800"
+                isUser 
+                  ? "text-blue-300 hover:text-blue-100" 
+                  : "text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
               }`}
               {...props}
             />
@@ -77,7 +79,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
               className={`border-l-4 pl-4 italic my-3 ${
                 isUser 
                   ? "border-gray-600 text-gray-300" 
-                  : "border-slate-300 text-slate-600"
+                  : "border-slate-300 text-slate-600 dark:border-slate-600 dark:text-slate-400"
               }`}
               {...props}
             />
@@ -154,7 +156,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                   className={`px-1.5 py-0.5 rounded text-[0.9em] font-mono mx-0.5 align-baseline ${
                     isUser
                       ? "bg-gray-700 text-gray-100"
-                      : "bg-slate-200 text-slate-800"
+                      : "bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-200"
                   }`}
                   {...props}
                 >
@@ -173,13 +175,13 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
 
   return (
     <div
-      className={`py-5 px-4 sm:px-6 border-b border-slate-100 ${
-        isUser ? "bg-white" : "bg-slate-50"
+      className={`py-5 px-4 sm:px-6 border-b border-slate-100 dark:border-slate-800 ${
+        isUser ? "bg-white dark:bg-slate-900" : "bg-slate-50 dark:bg-slate-800"
       }`}
     >
       {isUser ? (
         <div className="flex justify-end">
-          <div className="max-w-[70%] bg-gray-800 text-white rounded-2xl px-4 py-3 rounded-br-md">
+          <div className="max-w-[70%] bg-gray-800 dark:bg-gray-700 text-white rounded-2xl px-4 py-3 rounded-br-md">
             <div className="prose prose-slate prose-sm max-w-none break-words text-start text-white leading-relaxed">
               {renderContent()}
               {isStreaming && (
@@ -196,23 +198,20 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
             </div>
           </div>
           <div className="flex-1 min-w-0 space-y-2">
-            <p
-              className="font-semibold text-sm tracking-wide"
-              style={{ color: "#2D3748" }}
-            >
+            <p className="font-semibold text-sm tracking-wide text-slate-700 dark:text-slate-300">
               Atlas AI
             </p>
             {think && (
-              <div className="bg-slate-100 rounded-lg p-3 mb-3 border border-slate-200 shadow-sm">
-                <p className="text-xs text-slate-500 mb-1 font-medium">
+              <div className="bg-slate-100 dark:bg-slate-700 rounded-lg p-3 mb-3 border border-slate-200 dark:border-slate-600 shadow-sm">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-1 font-medium">
                   Pensando...
                 </p>
-                <div className="prose prose-slate prose-sm max-w-none break-words overflow-hidden text-slate-600">
+                <div className="prose prose-slate prose-sm max-w-none break-words overflow-hidden text-slate-600 dark:text-slate-300">
                   {think}
                 </div>
               </div>
             )}
-            <div className="prose prose-slate prose-sm max-w-none break-words text-start text-slate-800 leading-relaxed">
+            <div className="prose prose-slate prose-sm max-w-none break-words text-start text-slate-800 dark:text-slate-200 leading-relaxed">
               {renderContent()}
               {isStreaming && (
                 <span className="inline-block w-1 h-4 ml-1 bg-blue-600 animate-pulse rounded-full" />

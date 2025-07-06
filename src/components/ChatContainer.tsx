@@ -590,13 +590,13 @@ export const ChatContainer: React.FC = () => {
 
   return (
     <div
-      className={`flex flex-col h-screen bg-gray-50 ${isMobile ? "pt-32" : ""}`}
+      className={`flex flex-col h-screen bg-gray-50 dark:bg-slate-900 ${isMobile ? "pt-32" : ""}`}
     >
       <ChatHeader
-        className={isMobile ? "fixed top-0 left-0 right-0 z-10 bg-white" : ""}
+        className={isMobile ? "fixed top-0 left-0 right-0 z-10 bg-white dark:bg-slate-900" : ""}
       />
       <div
-        className={`bg-white p-4 shadow-sm ${
+        className={`bg-white dark:bg-slate-900 p-4 shadow-sm ${
           isMobile ? "fixed top-16 left-0 right-0 z-10" : ""
         }`}
       >

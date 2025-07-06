@@ -50,7 +50,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   return (
     <form
       onSubmit={handleSubmit}
-      className={`fixed bottom-0 left-0 right-0 border-t bg-white px-4 py-4 sm:px-6 ${
+      className={`fixed bottom-0 left-0 right-0 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-4 sm:px-6 ${
         className || ""
       }`}
     >
@@ -59,13 +59,13 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           {selectedFiles.map((file, index) => (
             <div
               key={index}
-              className="flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-2 text-sm"
+              className="flex items-center gap-2 bg-gray-100 dark:bg-slate-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-slate-200"
             >
               <span className="truncate max-w-[200px]">{file.name}</span>
               <button
                 type="button"
                 onClick={() => removeFile(index)}
-                className="text-gray-500 hover:text-red-500"
+                className="text-gray-500 hover:text-red-500 dark:text-slate-400 dark:hover:text-red-400"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -85,14 +85,14 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         <button
           type="button"
           onClick={handleFileButtonClick}
-          className="absolute left-3 rounded-md p-2 text-gray-400 hover:text-gray-600"
+          className="absolute left-3 rounded-md p-2 text-gray-400 hover:text-gray-600 dark:text-slate-400 dark:hover:text-slate-300"
           disabled={isLoading}
         >
           <Paperclip className="h-5 w-5" />
         </button>
         <input
           type="text"
-          className="flex-1 border rounded-lg px-12 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 pr-12 h-[56px]"
+          className="flex-1 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-12 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 pr-12 h-[56px] placeholder:text-slate-500 dark:placeholder:text-slate-400"
           placeholder={t("chat.inputPlaceholder")}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
@@ -104,14 +104,14 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           className={`absolute right-3 rounded-md p-2 ${
             (message.trim() || selectedFiles.length > 0) && !isLoading
               ? "chat-gradient text-white"
-              : "bg-gray-200 text-gray-400"
+              : "bg-gray-200 text-gray-400 dark:bg-slate-700 dark:text-slate-500"
           }`}
           disabled={!(message.trim() || selectedFiles.length > 0) || isLoading}
         >
           <Send className="h-5 w-5" />
         </button>
       </div>
-      <div className="mt-2 text-xs text-gray-500 px-1">
+      <div className="mt-2 text-xs text-gray-500 dark:text-slate-400 px-1">
         Pressione Enter para enviar, Shift+Enter para adicionar uma nova linha
       </div>
     </form>

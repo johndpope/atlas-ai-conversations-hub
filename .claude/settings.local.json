@@ -20,7 +20,8 @@
       "Bash(npm run build:*)",
       "Bash(git -C /Users/johndpope/Documents/GitHub/grok-api commit -m \"Add browser-compatible MockGrokAPI with fetch instead of got-scraping\n\n🤖 Generated with [Claude Code](https://claude.ai/code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\")",
       "Bash(pnpm update:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(npm run dev:*)"
     ],
     "deny": []
   }
