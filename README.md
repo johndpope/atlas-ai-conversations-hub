@@ -54,10 +54,10 @@ git clone https://github.com/speNillusion/atlas-ai-conversations-hub.git
 cd atlas-ai-conversations-hub
 
 # Install dependencies
-npm install
+pnpm install
 
 # Start the development server
-npm run dev
+pnpm run dev
 ```
 
 ## Development with Grok AI
@@ -66,7 +66,7 @@ npm run dev
 Configure your Grok API credentials in `variables.json` and start the development server:
 
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 ### Using Mock Grok Server
@@ -74,11 +74,11 @@ For testing without real API authentication, use the mock server:
 
 ```bash
 # Start development with mock Grok server
-npm run dev:with-mock
+pnpm run dev:with-mock
 
 # Or run components separately
-npm run mock-server  # Start mock server on port 3001
-npm run dev          # Start main app on port 5173
+pnpm run mock-server  # Start mock server on port 3001
+pnpm run dev          # Start main app on port 5173
 ```
 
 The mock server provides:
@@ -91,7 +91,7 @@ The mock server provides:
 
 ```bash
 # Build the project
-npm run build
+pnpm run build
 
 # Add Android platform
 npx cap add android
@@ -105,13 +105,13 @@ npx cap open android
 
 ## Available Scripts
 
-- `npm run dev` - Start development server
-- `npm run dev:with-mock` - Start development with mock Grok server
-- `npm run mock-server` - Start only the mock Grok server
-- `npm run build` - Build for production
-- `npm run build:dev` - Build for development
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
+- `pnpm run dev` - Start development server
+- `pnpm run dev:with-mock` - Start development with mock Grok server
+- `pnpm run mock-server` - Start only the mock Grok server
+- `pnpm run build` - Build for production
+- `pnpm run build:dev` - Build for development
+- `pnpm run preview` - Preview production build
+- `pnpm run lint` - Run ESLint
 
 ## API Integration
 

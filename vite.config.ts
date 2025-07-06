@@ -5,6 +5,24 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  optimizeDeps: {
+    exclude: [
+      'chromium-bidi/lib/cjs/bidiMapper/BidiMapper',
+      'chromium-bidi/lib/cjs/cdp/CdpConnection',
+      'patchright-core',
+      'patchright'
+    ]
+  },
+  build: {
+    rollupOptions: {
+      external: [
+        'chromium-bidi/lib/cjs/bidiMapper/BidiMapper',
+        'chromium-bidi/lib/cjs/cdp/CdpConnection',
+        'patchright-core',
+        'patchright'
+      ]
+    }
+  },
   server: {
     host: "::",
     port: 3000,
