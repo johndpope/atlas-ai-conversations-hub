@@ -7,66 +7,121 @@
 [![Capacitor](https://img.shields.io/badge/Capacitor-119EFF?style=for-the-badge&logo=Capacitor&logoColor=white)](https://capacitorjs.com/)
 [![SQLite](https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white)](https://www.sqlite.org/)
 
-Um assistente de IA moderno e intuitivo para suas conversas diárias
+A modern and intuitive AI assistant for your daily conversations
 
 </div>
 
-## Sobre o Projeto
+## About the Project
 
-**Atenção** projeto utiliza licença: [LICENSE](./LICENSE)
+**Attention**: This project uses license: [LICENSE](./LICENSE)
 
-Atlas AI é um assistente de inteligência artificial desenvolvido com tecnologias modernas, oferecendo uma interface amigável e responsiva para interações naturais. Disponível tanto para web quanto para dispositivos móveis através do Capacitor, o Atlas AI está sempre pronto para ajudar com suas perguntas e necessidades.
+Atlas AI is an artificial intelligence assistant developed with modern technologies, offering a friendly and responsive interface for natural interactions. Available for both web and mobile devices through Capacitor, Atlas AI is always ready to help with your questions and needs.
 
-## Funcionalidades
+## Features
 
-- 💬 Interface de chat intuitiva e moderna  
-- 🎨 Design responsivo e adaptável  
-- 📱 Suporte multiplataforma (Web e Mobile)  
-- 🔄 Integração perfeita com IA  
-- 💾 Armazenamento local com SQLite (Dexie)  
-- 🎯 Componentes UI personalizados com Radix UI  
+- 💬 Intuitive and modern chat interface  
+- 🎨 Responsive and adaptive design  
+- 📱 Cross-platform support (Web and Mobile)  
+- 🔄 Integration with multiple AI APIs (Groq, Google AI, Grok)  
+- 🚀 Grok AI support with streaming responses  
+- 🧪 Mock server for testing Grok AI without authentication  
+- 💾 Local storage with SQLite (Dexie)  
+- 🎯 Custom UI components with Radix UI  
 
-## Tecnologias
+## Technologies
 
-O projeto foi desenvolvido utilizando as seguintes tecnologias:
+The project was developed using the following technologies:
 
-- **React**: Biblioteca JavaScript para construção de interfaces  
-- **TypeScript**: Superset JavaScript com tipagem estática  
-- **Capacitor**: Framework para desenvolvimento de aplicações móveis híbridas  
-- **Radix UI**: Biblioteca de componentes UI primitivos e acessíveis  
-- **SQLite**: Sistema de gerenciamento de banco de dados relacional  
+- **React**: JavaScript library for building user interfaces  
+- **TypeScript**: JavaScript superset with static typing  
+- **Capacitor**: Framework for hybrid mobile app development  
+- **Radix UI**: Accessible primitive UI components library  
+- **SQLite**: Relational database management system  
+- **Grok API**: Integration with X's AI model for advanced conversations  
 
-## Instalação
+## Installation
 
-Em ```variables.json```, coloque sua API Key da Groq.
+Add your API keys in `variables.json`:
+- Groq API Key
+- Google AI API Key  
+- Grok API credentials (optional, can use mock server)
 
 ```bash
-# Clone o repositório
+# Clone the repository
 git clone https://github.com/speNillusion/atlas-ai-conversations-hub.git
 
-# Entre no diretório
-cd atlas-chat
+# Enter the directory
+cd atlas-ai-conversations-hub
 
-# Instale as dependências
+# Install dependencies
 npm install
 
-# Inicie o servidor de desenvolvimento
+# Start the development server
 npm run dev
 ```
 
-## Build Mobile
+## Development with Grok AI
+
+### Using Real Grok API
+Configure your Grok API credentials in `variables.json` and start the development server:
 
 ```bash
-# Build do projeto
+npm run dev
+```
+
+### Using Mock Grok Server
+For testing without real API authentication, use the mock server:
+
+```bash
+# Start development with mock Grok server
+npm run dev:with-mock
+
+# Or run components separately
+npm run mock-server  # Start mock server on port 3001
+npm run dev          # Start main app on port 5173
+```
+
+The mock server provides:
+- Simulated streaming responses
+- Conversation management
+- Health check endpoint at `http://localhost:3001/health`
+- Full API compatibility for testing
+
+## Mobile Build
+
+```bash
+# Build the project
 npm run build
 
-# Adicione a plataforma Android
+# Add Android platform
 npx cap add android
 
-# Sincronize os arquivos
+# Sync files
 npx cap sync
 
-# Abra o projeto no Android Studio
+# Open project in Android Studio
 npx cap open android
 ```
+
+## Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run dev:with-mock` - Start development with mock Grok server
+- `npm run mock-server` - Start only the mock Grok server
+- `npm run build` - Build for production
+- `npm run build:dev` - Build for development
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
+
+## API Integration
+
+The app supports multiple AI providers:
+
+1. **Groq API** - Fast inference with various models
+2. **Google AI** - Integration with Gemini models
+3. **Grok AI** - X's AI model with streaming support
+4. **Mock Grok** - Testing environment without API costs
+
+Each provider can be selected from the model dropdown in the chat interface.
+
 ---
