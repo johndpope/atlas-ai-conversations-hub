@@ -80,7 +80,7 @@ export const ChatContainer: React.FC = () => {
     }
 
     async sendMessageStream(
-      options: { message: string; customInstructions?: string },
+      options: { message: string; customInstructions?: string; fileAttachments?: any[] },
       callbacks: {
         onToken?: (token: string) => void;
         onComplete?: (response: { fullMessage: string }) => void;
@@ -95,6 +95,7 @@ export const ChatContainer: React.FC = () => {
           },
           body: JSON.stringify({
             message: options.message,
+            fileAttachments: options.fileAttachments || [],
           }),
         });
 
@@ -152,7 +153,12 @@ export const ChatContainer: React.FC = () => {
   const isMobile = useIsMobile();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<string>("qwen32b");
+  const [selectedModel, setSelectedModel] = useState<string>(
+    window.location.search.includes('mock=true') || 
+    import.meta.env.VITE_MOCK_MODE === 'true' || 
+    import.meta.env.MODE === 'mock' ? 
+    "grok-mock" : "qwen32b"
+  );
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -164,7 +170,7 @@ export const ChatContainer: React.FC = () => {
     scrollToBottom();
   }, [messages, isLoading]);
 
-  const handleSendMessage = async (content: string) => {
+  const handleSendMessage = async (content: string, files?: File[]) => {
     let resposta = "";
     const messageId = Date.now().toString();
 
@@ -345,11 +351,55 @@ export const ChatContainer: React.FC = () => {
           setMessages((prevMessages) => [...prevMessages, initialMessage]);
           setIsLoading(false);
 
+          // Handle file uploads first if any
+          let fileAttachments: any[] = [];
+          if (files && files.length > 0) {
+            try {
+              const uploadPromises = files.map(async (file) => {
+                // Convert file to base64 for the mock server
+                const fileData = await new Promise<string>((resolve) => {
+                  const reader = new FileReader();
+                  reader.onload = () => resolve(reader.result as string);
+                  reader.readAsDataURL(file);
+                });
+                
+                const response = await fetch('http://localhost:3001/rest/app-chat/upload-file', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    fileName: file.name,
+                    fileMimeType: file.type,
+                    content: fileData
+                  }),
+                });
+                
+                if (!response.ok) {
+                  throw new Error(`Upload failed: ${response.status}`);
+                }
+                
+                const fileMetadata = await response.json();
+                return fileMetadata;
+              });
+              
+              fileAttachments = await Promise.all(uploadPromises);
+            } catch (error) {
+              console.error('File upload error:', error);
+              toast({
+                title: "Upload Error",
+                description: "Failed to upload files",
+                variant: "destructive",
+              });
+            }
+          }
+
           // Send streaming message to Mock Grok
           await mockGrokApi.sendMessageStream(
             {
               message: content,
               customInstructions: context,
+              fileAttachments: fileAttachments,
             },
             {
               onToken: (token: string) => {

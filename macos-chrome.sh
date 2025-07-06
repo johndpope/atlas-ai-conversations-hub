@@ -20,6 +20,6 @@ echo "Starting Chrome with debugging enabled..."
   --disable-web-security \
   --disable-features=VizDisplayCompositor \
   --start-maximized \
-  http://localhost:3000 &
-
+  http://localhost:3000?mock=true &
+  
   pnpm run dev:with-mock
