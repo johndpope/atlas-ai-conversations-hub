@@ -4,12 +4,15 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { FollowUpSuggestions } from "./FollowUpSuggestions";
 
 interface ChatMessageProps {
   content: string;
   isUser: boolean;
   think?: string | null;
   isStreaming?: boolean;
+  followUpSuggestions?: string[];
+  onSuggestionClick?: (suggestion: string) => void;
 }
 
 // Estilo aprimorado para blocos de código
@@ -35,6 +38,8 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
   isUser,
   think,
   isStreaming,
+  followUpSuggestions,
+  onSuggestionClick,
 }) => {
   const [copied, setCopied] = useState(false);
 
@@ -194,6 +199,12 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
             <span className="inline-block w-1 h-4 ml-1 bg-blue-600 animate-pulse rounded-full" />
           )}
         </div>
+        {!isUser && !isStreaming && followUpSuggestions && onSuggestionClick && (
+          <FollowUpSuggestions
+            suggestions={followUpSuggestions}
+            onSuggestionClick={onSuggestionClick}
+          />
+        )}
       </div>
     </div>
   );

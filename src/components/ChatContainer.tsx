@@ -25,6 +25,7 @@ interface Message {
   isUser: boolean;
   think?: string | null;
   isStreaming?: boolean;
+  followUpSuggestions?: string[];
 }
 
 interface AIModel {
@@ -85,7 +86,7 @@ export const ChatContainer: React.FC = () => {
       options: { message: string; customInstructions?: string; fileAttachments?: any[] },
       callbacks: {
         onToken?: (token: string) => void;
-        onComplete?: (response: { fullMessage: string }) => void;
+        onComplete?: (response: { fullMessage: string; followUpSuggestions?: string[] }) => void;
         onError?: (error: any) => void;
       }
     ): Promise<void> {
@@ -108,6 +109,7 @@ export const ChatContainer: React.FC = () => {
         const reader = response.body?.getReader();
         const decoder = new TextDecoder();
         let fullMessage = '';
+        let followUpSuggestions: string[] = [];
 
         if (!reader) {
           throw new Error('No response body reader available');
@@ -130,14 +132,16 @@ export const ChatContainer: React.FC = () => {
                   fullMessage += token;
                   callbacks.onToken?.(token);
                 } else if (parsed.result?.response?.finalMetadata) {
-                  // End of stream - call onComplete
-                  callbacks.onComplete?.({ fullMessage });
+                  // Capture follow-up suggestions from finalMetadata
+                  followUpSuggestions = parsed.result.response.finalMetadata.followUpSuggestions || [];
+                  // End of stream - call onComplete with suggestions
+                  callbacks.onComplete?.({ fullMessage, followUpSuggestions });
                   return;
                 }
               } catch (e) {
                 // Skip invalid JSON or check for [DONE] marker
                 if (line.trim() === '[DONE]') {
-                  callbacks.onComplete?.({ fullMessage });
+                  callbacks.onComplete?.({ fullMessage, followUpSuggestions });
                   return;
                 }
               }
@@ -166,6 +170,10 @@ export const ChatContainer: React.FC = () => {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleSuggestionClick = (suggestion: string) => {
+    handleSendMessage(suggestion);
   };
 
   useEffect(() => {
@@ -423,6 +431,16 @@ export const ChatContainer: React.FC = () => {
               },
               onComplete: (response) => {
                 const processed = processThinkTags(response.fullMessage);
+                
+                // Ensure followUpSuggestions are strings, not objects
+                const followUpSuggestions = (response.followUpSuggestions || []).map((suggestion: any) => {
+                  if (typeof suggestion === 'string') {
+                    return suggestion;
+                  }
+                  // If it's an object, try to extract a meaningful string
+                  return suggestion.label || suggestion.properties || JSON.stringify(suggestion);
+                });
+                
                 setMessages((prevMessages) =>
                   prevMessages.map((msg) =>
                     msg.id === aiMessageId
@@ -431,6 +449,7 @@ export const ChatContainer: React.FC = () => {
                           content: processed.content,
                           think: processed.think,
                           isStreaming: false,
+                          followUpSuggestions: followUpSuggestions,
                         }
                       : msg
                   )
@@ -606,6 +625,8 @@ export const ChatContainer: React.FC = () => {
                 isUser={message.isUser}
                 think={message.think}
                 isStreaming={message.isStreaming}
+                followUpSuggestions={message.followUpSuggestions}
+                onSuggestionClick={handleSuggestionClick}
               />
             ))}
             {isLoading && <ThinkingIndicator />}
