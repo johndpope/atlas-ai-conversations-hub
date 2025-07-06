@@ -59,7 +59,9 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
           ),
           a: ({ node, ...props }) => (
             <a
-              className="text-blue-600 hover:text-blue-800 underline"
+              className={`underline ${
+                isUser ? "text-blue-300 hover:text-blue-100" : "text-blue-600 hover:text-blue-800"
+              }`}
               {...props}
             />
           ),
@@ -72,7 +74,11 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
           li: ({ node, ...props }) => <li className="mb-1" {...props} />,
           blockquote: ({ node, ...props }) => (
             <blockquote
-              className="border-l-4 border-slate-300 pl-4 italic text-slate-600 my-3"
+              className={`border-l-4 pl-4 italic my-3 ${
+                isUser 
+                  ? "border-gray-600 text-gray-300" 
+                  : "border-slate-300 text-slate-600"
+              }`}
               {...props}
             />
           ),
@@ -145,7 +151,11 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
               // Renderizar como código inline (mesmo que a sintaxe original fosse ```)
               return (
                 <code
-                  className="bg-slate-200 text-slate-800 px-1.5 py-0.5 rounded text-[0.9em] font-mono mx-0.5 align-baseline"
+                  className={`px-1.5 py-0.5 rounded text-[0.9em] font-mono mx-0.5 align-baseline ${
+                    isUser
+                      ? "bg-gray-700 text-gray-100"
+                      : "bg-slate-200 text-slate-800"
+                  }`}
                   {...props}
                 >
                   {/* Usar codeText aqui para remover a quebra de linha final, se houver */}
@@ -163,49 +173,60 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
 
   return (
     <div
-      className={`flex items-start gap-4 py-5 px-4 sm:px-6 border-b border-slate-100 ${
+      className={`py-5 px-4 sm:px-6 border-b border-slate-100 ${
         isUser ? "bg-white" : "bg-slate-50"
       }`}
     >
-      <div className="shrink-0 pt-1">
-        {isUser ? (
-          <UserCircle className="h-7 w-7 text-slate-500" />
-        ) : (
-          <div className="h-7 w-7 rounded-full chat-gradient flex items-center justify-center shadow-sm">
-            <span className="text-white font-semibold text-xs">AI</span>
-          </div>
-        )}
-      </div>
-      <div className="flex-1 min-w-0 space-y-2">
-        <p
-          className="font-semibold text-sm tracking-wide"
-          style={{ color: isUser ? "#4A5568" : "#2D3748" }}
-        >
-          {isUser ? "Você" : "Atlas AI"}
-        </p>
-        {!isUser && think && (
-          <div className="bg-slate-100 rounded-lg p-3 mb-3 border border-slate-200 shadow-sm">
-            <p className="text-xs text-slate-500 mb-1 font-medium">
-              Pensando...
-            </p>
-            <div className="prose prose-slate prose-sm max-w-none break-words overflow-hidden text-slate-600">
-              {think}
+      {isUser ? (
+        <div className="flex justify-end">
+          <div className="max-w-[70%] bg-gray-800 text-white rounded-2xl px-4 py-3 rounded-br-md">
+            <div className="prose prose-slate prose-sm max-w-none break-words text-start text-white leading-relaxed">
+              {renderContent()}
+              {isStreaming && (
+                <span className="inline-block w-1 h-4 ml-1 bg-blue-600 animate-pulse rounded-full" />
+              )}
             </div>
           </div>
-        )}
-        <div className="prose prose-slate prose-sm max-w-none break-words text-start text-slate-800 leading-relaxed">
-          {renderContent()}
-          {isStreaming && (
-            <span className="inline-block w-1 h-4 ml-1 bg-blue-600 animate-pulse rounded-full" />
-          )}
         </div>
-        {!isUser && !isStreaming && followUpSuggestions && onSuggestionClick && (
-          <FollowUpSuggestions
-            suggestions={followUpSuggestions}
-            onSuggestionClick={onSuggestionClick}
-          />
-        )}
-      </div>
+      ) : (
+        <div className="flex items-start gap-4">
+          <div className="shrink-0 pt-1">
+            <div className="h-7 w-7 rounded-full chat-gradient flex items-center justify-center shadow-sm">
+              <span className="text-white font-semibold text-xs">AI</span>
+            </div>
+          </div>
+          <div className="flex-1 min-w-0 space-y-2">
+            <p
+              className="font-semibold text-sm tracking-wide"
+              style={{ color: "#2D3748" }}
+            >
+              Atlas AI
+            </p>
+            {think && (
+              <div className="bg-slate-100 rounded-lg p-3 mb-3 border border-slate-200 shadow-sm">
+                <p className="text-xs text-slate-500 mb-1 font-medium">
+                  Pensando...
+                </p>
+                <div className="prose prose-slate prose-sm max-w-none break-words overflow-hidden text-slate-600">
+                  {think}
+                </div>
+              </div>
+            )}
+            <div className="prose prose-slate prose-sm max-w-none break-words text-start text-slate-800 leading-relaxed">
+              {renderContent()}
+              {isStreaming && (
+                <span className="inline-block w-1 h-4 ml-1 bg-blue-600 animate-pulse rounded-full" />
+              )}
+            </div>
+            {!isStreaming && followUpSuggestions && onSuggestionClick && (
+              <FollowUpSuggestions
+                suggestions={followUpSuggestions}
+                onSuggestionClick={onSuggestionClick}
+              />
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
