@@ -16,6 +16,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Api } from "../database/db";
 import { apiKeyGroq, geminiKey, huggfaceKey } from "../../variables.json";
 import { GoogleGenAI } from "@google/genai";
+import { GrokAPI, MockGrokAPI } from "grok-api";
 
 interface Message {
   id: string;
@@ -41,6 +42,8 @@ const AI_MODELS: AIModel[] = [
   { id: "deepseekr1", name: "DeepSeek R1", maxTokens: 131072 },
   { id: "deepseekv3", name: "DeepSeek V3", maxTokens: 131072 },
   { id: "qwen32b", name: "Qwen Master 32b", maxTokens: 131072 },
+  { id: "grok", name: "Grok AI", maxTokens: 32768 },
+  { id: "grok-mock", name: "Grok AI (Mock)", maxTokens: 32768 },
 ];
 
 // Helper function to process think tags and content
@@ -157,6 +160,128 @@ export const ChatContainer: React.FC = () => {
               );
             }
           }
+          break;
+        }
+
+        case "grok": {
+          // Initialize Grok API with authentication
+          const grokApi = new GrokAPI();
+          setMessages((prevMessages) => [...prevMessages, initialMessage]);
+          setIsLoading(false);
+
+          // Build message history for Grok
+          const grokMessages = messages.map((msg) => ({
+            message: msg.content,
+            role: msg.role as "user" | "assistant" | "system",
+          }));
+
+          // Send streaming message to Grok
+          await grokApi.sendMessageStream(
+            {
+              message: content,
+              customInstructions: context,
+            },
+            {
+              onToken: (token: string) => {
+                resposta += token;
+                const processed = processThinkTags(resposta);
+
+                setMessages((prevMessages) =>
+                  prevMessages.map((msg) =>
+                    msg.id === aiMessageId
+                      ? {
+                          ...msg,
+                          content: processed.content,
+                          think: processed.think,
+                          isStreaming: true,
+                        }
+                      : msg
+                  )
+                );
+              },
+              onComplete: (response) => {
+                const processed = processThinkTags(response.fullMessage);
+                setMessages((prevMessages) =>
+                  prevMessages.map((msg) =>
+                    msg.id === aiMessageId
+                      ? {
+                          ...msg,
+                          content: processed.content,
+                          think: processed.think,
+                          isStreaming: false,
+                        }
+                      : msg
+                  )
+                );
+              },
+              onError: (error) => {
+                console.error("Grok streaming error:", error);
+                toast({
+                  title: "Grok Error",
+                  description: "Failed to get response from Grok AI",
+                  variant: "destructive",
+                });
+              },
+            }
+          );
+          break;
+        }
+
+        case "grok-mock": {
+          // Initialize Mock Grok API (no authentication needed)
+          const mockGrokApi = new MockGrokAPI("http://localhost:3001", true);
+          setMessages((prevMessages) => [...prevMessages, initialMessage]);
+          setIsLoading(false);
+
+          // Send streaming message to Mock Grok
+          await mockGrokApi.sendMessageStream(
+            {
+              message: content,
+              customInstructions: context,
+            },
+            {
+              onToken: (token: string) => {
+                resposta += token;
+                const processed = processThinkTags(resposta);
+
+                setMessages((prevMessages) =>
+                  prevMessages.map((msg) =>
+                    msg.id === aiMessageId
+                      ? {
+                          ...msg,
+                          content: processed.content,
+                          think: processed.think,
+                          isStreaming: true,
+                        }
+                      : msg
+                  )
+                );
+              },
+              onComplete: (response) => {
+                const processed = processThinkTags(response.fullMessage);
+                setMessages((prevMessages) =>
+                  prevMessages.map((msg) =>
+                    msg.id === aiMessageId
+                      ? {
+                          ...msg,
+                          content: processed.content,
+                          think: processed.think,
+                          isStreaming: false,
+                        }
+                      : msg
+                  )
+                );
+              },
+              onError: (error) => {
+                console.error("Mock Grok streaming error:", error);
+                toast({
+                  title: "Mock Grok Error",
+                  description: "Failed to get response from Mock Grok AI",
+                  variant: "destructive",
+                });
+              },
+            }
+          );
           break;
         }
 

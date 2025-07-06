@@ -45,6 +45,12 @@ export default defineConfig(({ mode }) => ({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/hyperbolic\/v1\/chat\/completions/, '/hyperbolic/v1/chat/completions'),
         secure: false,
+      },
+      "/grok-mock": {
+        target: "http://localhost:3001",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/grok-mock/, ''),
+        secure: false,
       }
     },
   },
