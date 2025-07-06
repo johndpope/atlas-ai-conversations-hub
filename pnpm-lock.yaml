@@ -146,9 +146,9 @@ importers:
       express:
         specifier: ^5.1.0
         version: 5.1.0
-      grok-api:
+      grok-api-ts:
         specifier: github:johndpope/grok-api
-        version: grok-api-ts@https://codeload.github.com/johndpope/grok-api/tar.gz/00ac417fb1e24d0a3d8dbf5023fbf9c53d6ad6c7(chrome-launcher@0.15.2)
+        version: https://codeload.github.com/johndpope/grok-api/tar.gz/00ac417fb1e24d0a3d8dbf5023fbf9c53d6ad6c7(chrome-launcher@0.15.2)
       input-otp:
         specifier: ^1.2.4
         version: 1.4.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)

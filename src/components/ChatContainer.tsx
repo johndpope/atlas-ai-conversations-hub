@@ -16,7 +16,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Api } from "../database/db";
 import { apiKeyGroq, geminiKey, huggfaceKey } from "../../variables.json";
 import { GoogleGenAI } from "@google/genai";
-import { GrokAPI, MockGrokAPI } from "grok-api";
+import { GrokAPI, MockGrokAPI } from "grok-api-ts";
 
 interface Message {
   id: string;

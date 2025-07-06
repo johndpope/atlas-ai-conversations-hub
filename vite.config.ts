@@ -10,7 +10,8 @@ export default defineConfig(({ mode }) => ({
       'chromium-bidi/lib/cjs/bidiMapper/BidiMapper',
       'chromium-bidi/lib/cjs/cdp/CdpConnection',
       'patchright-core',
-      'patchright'
+      'patchright',
+      'grok-api'
     ]
   },
   build: {
@@ -19,7 +20,8 @@ export default defineConfig(({ mode }) => ({
         'chromium-bidi/lib/cjs/bidiMapper/BidiMapper',
         'chromium-bidi/lib/cjs/cdp/CdpConnection',
         'patchright-core',
-        'patchright'
+        'patchright',
+        'grok-api'
       ]
     }
   },

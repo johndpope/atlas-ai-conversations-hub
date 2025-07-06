@@ -5,7 +5,16 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "Bash(pnpm run dev:*)"
+      "Bash(pnpm run dev:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(pnpm list:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(pnpm why:*)",
+      "Bash(rm:*)",
+      "Bash(rg:*)",
+      "Bash(npm install:*)"
     ],
     "deny": []
   }

@@ -59,7 +59,7 @@
     "dotenv": "^16.5.0",
     "embla-carousel-react": "^8.3.0",
     "express": "^5.1.0",
-    "grok-api": "github:johndpope/grok-api",
+    "grok-api-ts": "github:johndpope/grok-api",
     "input-otp": "^1.2.4",
     "lucide-react": "^0.462.0",
     "memfs": "^4.17.1",
