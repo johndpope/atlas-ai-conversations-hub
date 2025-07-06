@@ -16,6 +16,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Api } from "../database/db";
 import { apiKeyGroq, geminiKey, huggfaceKey } from "../../variables.json";
 import { GoogleGenAI } from "@google/genai";
+import { useTranslation } from "react-i18next";
 // Removed problematic import - using inline implementation instead
 
 interface Message {
@@ -71,6 +72,7 @@ const processThinkTags = (text: string) => {
 };
 
 export const ChatContainer: React.FC = () => {
+  const { t } = useTranslation();
   // Simple browser-compatible Mock Grok API client
   class SimpleMockGrokAPI {
     private mockBaseUrl: string;
@@ -337,8 +339,8 @@ export const ChatContainer: React.FC = () => {
           } catch (error) {
             console.error("Grok streaming error:", error);
             toast({
-              title: "Grok Error",
-              description: "Failed to get response from Grok AI",
+              title: t("errors.grokError"),
+              description: t("errors.grokDescription"),
               variant: "destructive",
             });
           }
@@ -387,8 +389,8 @@ export const ChatContainer: React.FC = () => {
             } catch (error) {
               console.error('File upload error:', error);
               toast({
-                title: "Upload Error",
-                description: "Failed to upload files",
+                title: t("errors.uploadError"),
+                description: t("errors.uploadDescription"),
                 variant: "destructive",
               });
             }
@@ -437,8 +439,8 @@ export const ChatContainer: React.FC = () => {
               onError: (error) => {
                 console.error("Mock Grok streaming error:", error);
                 toast({
-                  title: "Mock Grok Error",
-                  description: "Failed to get response from Mock Grok AI",
+                  title: t("errors.mockGrokError"),
+                  description: t("errors.mockGrokDescription"),
                   variant: "destructive",
                 });
               },
@@ -558,9 +560,8 @@ export const ChatContainer: React.FC = () => {
     } catch (error) {
       console.error("Error in chat:", error);
       toast({
-        title: "Erro",
-        description:
-          "Não foi possível processar sua mensagem. Tente novamente.",
+        title: t("errors.title"),
+        description: t("errors.description"),
         variant: "destructive",
       });
     } finally {
@@ -582,12 +583,12 @@ export const ChatContainer: React.FC = () => {
       >
         <Select onValueChange={setSelectedModel} value={selectedModel}>
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select a model" />
+            <SelectValue placeholder={t("chat.selectModel")} />
           </SelectTrigger>
           <SelectContent>
             {AI_MODELS.map((model) => (
               <SelectItem key={model.id} value={model.id}>
-                {model.name} (Max: {model.maxTokens} tokens)
+                {t(`models.${model.id}`) || model.name} ({t("chat.maxTokens", { count: model.maxTokens })})
               </SelectItem>
             ))}
           </SelectContent>

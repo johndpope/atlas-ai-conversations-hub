@@ -1,5 +1,6 @@
 import React, { useState, FormEvent, KeyboardEvent, useRef } from "react";
 import { Send, Paperclip, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface ChatInputProps {
   onSendMessage: (message: string, files?: File[]) => void;
@@ -12,6 +13,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   className,
   isLoading = false,
 }) => {
+  const { t } = useTranslation();
   const [message, setMessage] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -91,7 +93,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         <input
           type="text"
           className="flex-1 border rounded-lg px-12 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 pr-12 h-[56px]"
-          placeholder="Digite sua mensagem..."
+          placeholder={t("chat.inputPlaceholder")}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}

@@ -1,0 +1,49 @@
+{
+  "welcome": {
+    "title": "Atlas AI에 오신 것을 환영합니다",
+    "subtitle": "대화와 코드를 위한 AI 어시스턴트",
+    "description": "대화를 시작하거나 무엇이든 물어보세요!"
+  },
+  "chat": {
+    "inputPlaceholder": "메시지를 입력하세요...",
+    "thinking": "생각 중...",
+    "selectModel": "모델 선택",
+    "maxTokens": "최대: {{count}} 토큰"
+  },
+  "models": {
+    "compound": "Compound Beta",
+    "llama": "Llama 3.3 70B 다용도",
+    "deepseek": "Deepseek R1 Distill 70B",
+    "maverick": "Llama 4 Maverick 17B",
+    "gemma": "Gemma 2 9B",
+    "gemini": "Gemini 2.0 Flash",
+    "deepseekr1": "DeepSeek R1",
+    "deepseekv3": "DeepSeek V3",
+    "qwen32b": "Qwen Master 32b",
+    "grok": "Grok AI",
+    "grok-mock": "Grok AI (Mock)"
+  },
+  "errors": {
+    "title": "오류",
+    "description": "메시지를 처리할 수 없습니다. 다시 시도해 주세요.",
+    "grokError": "Grok 오류",
+    "grokDescription": "Grok AI로부터 응답을 받을 수 없습니다",
+    "mockGrokError": "Mock Grok 오류",
+    "mockGrokDescription": "Mock Grok AI로부터 응답을 받을 수 없습니다",
+    "uploadError": "업로드 오류",
+    "uploadDescription": "파일 업로드에 실패했습니다"
+  },
+  "language": {
+    "select": "언어 선택",
+    "en": "English",
+    "es": "Español",
+    "fr": "Français",
+    "de": "Deutsch",
+    "pt": "Português",
+    "zh": "中文",
+    "ja": "日本語",
+    "ko": "한국어",
+    "it": "Italiano",
+    "ru": "Русский"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "welcome": {
+    "title": "Bienvenue sur Atlas AI",
+    "subtitle": "Votre assistant IA pour les conversations et le code",
+    "description": "Commencez une conversation ou posez-moi une question !"
+  },
+  "chat": {
+    "inputPlaceholder": "Tapez votre message...",
+    "thinking": "Réflexion...",
+    "selectModel": "Sélectionner un modèle",
+    "maxTokens": "Max : {{count}} tokens"
+  },
+  "models": {
+    "compound": "Compound Beta",
+    "llama": "Llama 3.3 70B Polyvalent",
+    "deepseek": "Deepseek R1 Distill 70B",
+    "maverick": "Llama 4 Maverick 17B",
+    "gemma": "Gemma 2 9B",
+    "gemini": "Gemini 2.0 Flash",
+    "deepseekr1": "DeepSeek R1",
+    "deepseekv3": "DeepSeek V3",
+    "qwen32b": "Qwen Master 32b",
+    "grok": "Grok AI",
+    "grok-mock": "Grok AI (Mock)"
+  },
+  "errors": {
+    "title": "Erreur",
+    "description": "Impossible de traiter votre message. Veuillez réessayer.",
+    "grokError": "Erreur Grok",
+    "grokDescription": "Impossible d'obtenir une réponse de Grok AI",
+    "mockGrokError": "Erreur Mock Grok",
+    "mockGrokDescription": "Impossible d'obtenir une réponse de Mock Grok AI",
+    "uploadError": "Erreur de Téléchargement",
+    "uploadDescription": "Impossible de télécharger les fichiers"
+  },
+  "language": {
+    "select": "Sélectionner la Langue",
+    "en": "English",
+    "es": "Español",
+    "fr": "Français",
+    "de": "Deutsch",
+    "pt": "Português",
+    "zh": "中文",
+    "ja": "日本語",
+    "ko": "한국어",
+    "it": "Italiano",
+    "ru": "Русский"
+  }
+}

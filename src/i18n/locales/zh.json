@@ -1,0 +1,49 @@
+{
+  "welcome": {
+    "title": "欢迎使用 Atlas AI",
+    "subtitle": "您的 AI 助手，用于对话和代码",
+    "description": "开始对话或询问我任何问题！"
+  },
+  "chat": {
+    "inputPlaceholder": "输入您的消息...",
+    "thinking": "思考中...",
+    "selectModel": "选择模型",
+    "maxTokens": "最大：{{count}} 个令牌"
+  },
+  "models": {
+    "compound": "Compound Beta",
+    "llama": "Llama 3.3 70B 多功能",
+    "deepseek": "Deepseek R1 Distill 70B",
+    "maverick": "Llama 4 Maverick 17B",
+    "gemma": "Gemma 2 9B",
+    "gemini": "Gemini 2.0 Flash",
+    "deepseekr1": "DeepSeek R1",
+    "deepseekv3": "DeepSeek V3",
+    "qwen32b": "Qwen Master 32b",
+    "grok": "Grok AI",
+    "grok-mock": "Grok AI (Mock)"
+  },
+  "errors": {
+    "title": "错误",
+    "description": "无法处理您的消息。请重试。",
+    "grokError": "Grok 错误",
+    "grokDescription": "无法从 Grok AI 获得响应",
+    "mockGrokError": "Mock Grok 错误",
+    "mockGrokDescription": "无法从 Mock Grok AI 获得响应",
+    "uploadError": "上传错误",
+    "uploadDescription": "无法上传文件"
+  },
+  "language": {
+    "select": "选择语言",
+    "en": "English",
+    "es": "Español",
+    "fr": "Français",
+    "de": "Deutsch",
+    "pt": "Português",
+    "zh": "中文",
+    "ja": "日本語",
+    "ko": "한국어",
+    "it": "Italiano",
+    "ru": "Русский"
+  }
+}

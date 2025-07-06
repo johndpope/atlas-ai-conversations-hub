@@ -1,4 +1,5 @@
 import React from "react";
+import { LanguageSelector } from "./LanguageSelector";
 
 interface ChatHeaderProps {
   className?: string;
@@ -14,6 +15,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({ className }) => {
           </div>
           <h1 className="text-xl font-bold logo-text text-center">Atlas AI</h1>
         </div>
+        <LanguageSelector />
       </div>
     </div>
   );
