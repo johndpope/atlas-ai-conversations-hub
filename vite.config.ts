@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => ({
       'chromium-bidi/lib/cjs/cdp/CdpConnection',
       'patchright-core',
       'patchright',
-      'grok-api'
+      'grok-api-ts'
     ]
   },
   build: {
@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => ({
         'chromium-bidi/lib/cjs/cdp/CdpConnection',
         'patchright-core',
         'patchright',
-        'grok-api'
+        'grok-api-ts'
       ]
     }
   },
@@ -70,6 +70,12 @@ export default defineConfig(({ mode }) => ({
         target: "http://localhost:3001",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/grok-mock/, ''),
+        secure: false,
+      },
+      "/grok-api": {
+        target: "http://localhost:3003",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/grok-api/, ''),
         secure: false,
       }
     },

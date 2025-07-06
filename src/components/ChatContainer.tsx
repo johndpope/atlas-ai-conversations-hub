@@ -16,7 +16,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Api } from "../database/db";
 import { apiKeyGroq, geminiKey, huggfaceKey } from "../../variables.json";
 import { GoogleGenAI } from "@google/genai";
-import { GrokAPI, MockGrokAPI } from "grok-api-ts";
+// Removed problematic import - using inline implementation instead
 
 interface Message {
   id: string;
@@ -71,6 +71,84 @@ const processThinkTags = (text: string) => {
 };
 
 export const ChatContainer: React.FC = () => {
+  // Simple browser-compatible Mock Grok API client
+  class SimpleMockGrokAPI {
+    private mockBaseUrl: string;
+
+    constructor(mockBaseUrl: string = 'http://localhost:3001') {
+      this.mockBaseUrl = mockBaseUrl;
+    }
+
+    async sendMessageStream(
+      options: { message: string; customInstructions?: string },
+      callbacks: {
+        onToken?: (token: string) => void;
+        onComplete?: (response: { fullMessage: string }) => void;
+        onError?: (error: any) => void;
+      }
+    ): Promise<void> {
+      try {
+        const response = await fetch(`${this.mockBaseUrl}/rest/app-chat/conversations/new`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: options.message,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
+        let fullMessage = '';
+
+        if (!reader) {
+          throw new Error('No response body reader available');
+        }
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.trim() && line !== '[DONE]') {
+              try {
+                const parsed = JSON.parse(line);
+                // Handle mock server response format: {"result":{"response":{"token":"..."}}}
+                if (parsed.result?.response?.token) {
+                  const token = parsed.result.response.token;
+                  fullMessage += token;
+                  callbacks.onToken?.(token);
+                } else if (parsed.result?.response?.finalMetadata) {
+                  // End of stream - call onComplete
+                  callbacks.onComplete?.({ fullMessage });
+                  return;
+                }
+              } catch (e) {
+                // Skip invalid JSON or check for [DONE] marker
+                if (line.trim() === '[DONE]') {
+                  callbacks.onComplete?.({ fullMessage });
+                  return;
+                }
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error in streaming message to mock Grok API:', error);
+        callbacks.onError?.(error);
+        throw error;
+      }
+    }
+  }
+
   const isMobile = useIsMobile();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -164,8 +242,6 @@ export const ChatContainer: React.FC = () => {
         }
 
         case "grok": {
-          // Initialize Grok API with authentication
-          const grokApi = new GrokAPI();
           setMessages((prevMessages) => [...prevMessages, initialMessage]);
           setIsLoading(false);
 
@@ -175,61 +251,97 @@ export const ChatContainer: React.FC = () => {
             role: msg.role as "user" | "assistant" | "system",
           }));
 
-          // Send streaming message to Grok
-          await grokApi.sendMessageStream(
-            {
-              message: content,
-              customInstructions: context,
-            },
-            {
-              onToken: (token: string) => {
-                resposta += token;
-                const processed = processThinkTags(resposta);
+          try {
+            // Send streaming message to Grok API server
+            const response = await fetch('/grok-api/stream', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                message: content,
+                customInstructions: context,
+                messageHistory: grokMessages,
+              }),
+            });
 
-                setMessages((prevMessages) =>
-                  prevMessages.map((msg) =>
-                    msg.id === aiMessageId
-                      ? {
-                          ...msg,
-                          content: processed.content,
-                          think: processed.think,
-                          isStreaming: true,
-                        }
-                      : msg
-                  )
-                );
-              },
-              onComplete: (response) => {
-                const processed = processThinkTags(response.fullMessage);
-                setMessages((prevMessages) =>
-                  prevMessages.map((msg) =>
-                    msg.id === aiMessageId
-                      ? {
-                          ...msg,
-                          content: processed.content,
-                          think: processed.think,
-                          isStreaming: false,
-                        }
-                      : msg
-                  )
-                );
-              },
-              onError: (error) => {
-                console.error("Grok streaming error:", error);
-                toast({
-                  title: "Grok Error",
-                  description: "Failed to get response from Grok AI",
-                  variant: "destructive",
-                });
-              },
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
             }
-          );
+
+            const reader = response.body?.getReader();
+            const decoder = new TextDecoder();
+
+            if (!reader) throw new Error("Failed to get response reader");
+
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+
+              const chunk = decoder.decode(value);
+              const lines = chunk.split('\n').filter(line => line.trim() !== '');
+
+              for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                  const data = line.slice(6);
+                  if (data === '[DONE]') break;
+
+                  try {
+                    const parsed = JSON.parse(data);
+                    
+                    if (parsed.type === 'token') {
+                      resposta += parsed.token;
+                      const processed = processThinkTags(resposta);
+
+                      setMessages((prevMessages) =>
+                        prevMessages.map((msg) =>
+                          msg.id === aiMessageId
+                            ? {
+                                ...msg,
+                                content: processed.content,
+                                think: processed.think,
+                                isStreaming: true,
+                              }
+                            : msg
+                        )
+                      );
+                    } else if (parsed.type === 'complete') {
+                      const processed = processThinkTags(parsed.fullMessage);
+                      setMessages((prevMessages) =>
+                        prevMessages.map((msg) =>
+                          msg.id === aiMessageId
+                            ? {
+                                ...msg,
+                                content: processed.content,
+                                think: processed.think,
+                                isStreaming: false,
+                              }
+                            : msg
+                        )
+                      );
+                    } else if (parsed.type === 'error') {
+                      throw new Error(parsed.error);
+                    }
+                  } catch (e) {
+                    console.error("Error parsing Grok SSE:", e);
+                  }
+                }
+              }
+            }
+          } catch (error) {
+            console.error("Grok streaming error:", error);
+            toast({
+              title: "Grok Error",
+              description: "Failed to get response from Grok AI",
+              variant: "destructive",
+            });
+          }
           break;
         }
 
         case "grok-mock": {
           // Initialize Mock Grok API (no authentication needed)
-          const mockGrokApi = new MockGrokAPI("http://localhost:3001", true);
+          const mockGrokApi = new SimpleMockGrokAPI("http://localhost:3001");
           setMessages((prevMessages) => [...prevMessages, initialMessage]);
           setIsLoading(false);
 

@@ -82,10 +82,32 @@ pnpm run dev          # Start main app on port 5173
 ```
 
 The mock server provides:
-- Simulated streaming responses
-- Conversation management
+- Simulated streaming responses with realistic delays
+- Conversation management with unique IDs
 - Health check endpoint at `http://localhost:3001/health`
 - Full API compatibility for testing
+- Browser-compatible implementation using native fetch API
+
+### Testing the Mock Integration
+
+1. Start the development server with mock: `pnpm run dev:with-mock`
+2. Open the app in your browser at `http://localhost:3000`
+3. Select "Grok AI (Mock)" from the model dropdown
+4. Send a test message to see the streaming response simulation
+5. Check the browser console for any integration logs
+
+The mock server simulates the real Grok API response structure:
+```json
+{"result":{"response":{"token":"Hello! ","responseId":"mock-resp-123"}}}
+```
+
+### Troubleshooting Grok Integration
+
+If you encounter `MockGrokAPI is not defined` errors:
+- Ensure the mock server is running on port 3001
+- Check that the browser can access `http://localhost:3001/health`
+- Verify the Vite proxy configuration is working
+- Use browser developer tools to monitor network requests
 
 ## Mobile Build
 
@@ -123,5 +145,40 @@ The app supports multiple AI providers:
 4. **Mock Grok** - Testing environment without API costs
 
 Each provider can be selected from the model dropdown in the chat interface.
+
+## Architecture & Recent Improvements
+
+### Browser-Compatible Mock API
+The Grok AI integration has been optimized for browser compatibility:
+
+- **SimpleMockGrokAPI**: Custom implementation using browser-native `fetch()` API
+- **No Node.js dependencies**: Removed `got-scraping` and other Node.js-specific packages
+- **Real-time streaming**: Proper handling of Server-Sent Events (SSE) responses
+- **Error handling**: Comprehensive error handling and fallback mechanisms
+
+### Proxy Configuration
+The application uses Vite proxy for API routing:
+
+```typescript
+// vite.config.ts
+proxy: {
+  '/grok-mock': {
+    target: 'http://localhost:3001',
+    changeOrigin: true,
+    rewrite: (path) => path.replace(/^\/grok-mock/, '')
+  },
+  '/grok-api': {
+    target: 'http://localhost:3003',
+    changeOrigin: true,
+    rewrite: (path) => path.replace(/^\/grok-api/, '')
+  }
+}
+```
+
+### Development Workflow
+1. **Mock Development**: Use `pnpm run dev:with-mock` for safe testing
+2. **Real API Testing**: Configure credentials and use `pnpm run dev`
+3. **Chrome Debugging**: Automated Chrome launch with debugging enabled
+4. **Hot Reload**: Real-time updates during development
 
 ---

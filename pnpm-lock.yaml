@@ -148,7 +148,7 @@ importers:
         version: 5.1.0
       grok-api-ts:
         specifier: github:johndpope/grok-api
-        version: https://codeload.github.com/johndpope/grok-api/tar.gz/00ac417fb1e24d0a3d8dbf5023fbf9c53d6ad6c7(chrome-launcher@0.15.2)
+        version: https://codeload.github.com/johndpope/grok-api/tar.gz/900d245f94a01d8071fbcea7ae4dfbfe7f8cbb85(chrome-launcher@0.15.2)
       input-otp:
         specifier: ^1.2.4
         version: 1.4.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -3177,8 +3177,8 @@ packages:
   graphemer@1.4.0:
     resolution: {integrity: sha512-EtKwoO6kxCL9WO5xipiHTZlSzBm7WLT627TqC/uVRd0HKmq8NXyebnNYxDoBi7wt8eTWrUrKXCOVaFq9x1kgag==}
 
-  grok-api-ts@https://codeload.github.com/johndpope/grok-api/tar.gz/00ac417fb1e24d0a3d8dbf5023fbf9c53d6ad6c7:
-    resolution: {tarball: https://codeload.github.com/johndpope/grok-api/tar.gz/00ac417fb1e24d0a3d8dbf5023fbf9c53d6ad6c7}
+  grok-api-ts@https://codeload.github.com/johndpope/grok-api/tar.gz/900d245f94a01d8071fbcea7ae4dfbfe7f8cbb85:
+    resolution: {tarball: https://codeload.github.com/johndpope/grok-api/tar.gz/900d245f94a01d8071fbcea7ae4dfbfe7f8cbb85}
     version: 1.1.2
     engines: {node: '>=14.0.0'}
     peerDependencies:
@@ -8488,7 +8488,7 @@ snapshots:
 
   graphemer@1.4.0: {}
 
-  grok-api-ts@https://codeload.github.com/johndpope/grok-api/tar.gz/00ac417fb1e24d0a3d8dbf5023fbf9c53d6ad6c7(chrome-launcher@0.15.2):
+  grok-api-ts@https://codeload.github.com/johndpope/grok-api/tar.gz/900d245f94a01d8071fbcea7ae4dfbfe7f8cbb85(chrome-launcher@0.15.2):
     dependencies:
       chrome-launcher: 0.15.2
       got-scraping: 3.2.15

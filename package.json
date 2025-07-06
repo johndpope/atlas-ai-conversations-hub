@@ -10,7 +10,10 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "mock-server": "node mock-grok-server.js",
-    "dev:with-mock": "concurrently \"npm run mock-server\" \"npm run dev\""
+    "grok-api-server": "node grok-api-server.js",
+    "dev:with-mock": "concurrently \"npm run mock-server\" \"npm run dev\"",
+    "dev:with-grok": "concurrently \"npm run grok-api-server\" \"npm run dev\"",
+    "dev:full": "concurrently \"npm run mock-server\" \"npm run grok-api-server\" \"npm run dev\""
   },
   "dependencies": {
     "@capacitor-community/sqlite": "^7.0.0",
