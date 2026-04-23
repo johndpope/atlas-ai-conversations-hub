@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MCP-B Debug Tool</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a2e; color: #eee; }
+        .status { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .success { background: #2d5a27; }
+        .error { background: #5a2727; }
+        .warning { background: #5a4a27; }
+        .info { background: #27275a; }
+        .tools-list { margin: 20px 0; }
+        .tool { padding: 10px; margin: 5px 0; background: #2a2a3e; border-left: 3px solid #4a9eff; }
+        pre { background: #1a1a2e; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔍 MCP-B Extension Debug Tool</h1>
+
+    <div id="status">
+        <div class="status info">Checking MCP-B extension status...</div>
+    </div>
+
+    <div class="tools-list">
+        <h2>📋 Available MCP Tools:</h2>
+        <div id="tools">Loading tools...</div>
+    </div>
+
+    <div class="info">
+        <h2>🔧 Debug Information:</h2>
+        <pre id="debug-info">Loading debug info...</pre>
+    </div>
+
+    <script>
+        async function debugMCP() {
+            const statusDiv = document.getElementById('status');
+            const toolsDiv = document.getElementById('tools');
+            const debugDiv = document.getElementById('debug-info');
+
+            const nav = window.navigator;
+            const debugInfo = [];
+
+            // Check if navigator.modelContext exists
+            if (nav.modelContext) {
+                debugInfo.push('✅ navigator.modelContext: AVAILABLE');
+                statusDiv.innerHTML = '<div class="status success">✅ MCP-B Extension detected</div>';
+
+                try {
+                    // Try to list available tools
+                    if (typeof nav.modelContext.listTools === 'function') {
+                        const tools = await nav.modelContext.listTools();
+                        debugInfo.push(`📊 Total tools registered: ${tools?.length || 0}`);
+
+                        if (tools && tools.length > 0) {
+                            toolsDiv.innerHTML = tools.map(tool => `
+                                <div class="tool">
+                                    <strong>${tool.name}</strong><br>
+                                    <small>${tool.description}</small>
+                                    <br><small style="color: #888">Input: ${JSON.stringify(tool.inputSchema)}</small>
+                                </div>
+                            `).join('');
+                        } else {
+                            toolsDiv.innerHTML = '<div class="status warning">⚠️ No tools registered yet</div>';
+                        }
+                    } else {
+                        debugInfo.push('❌ listTools function: NOT AVAILABLE');
+                        toolsDiv.innerHTML = '<div class="status error">❌ listTools function not found</div>';
+                    }
+
+                    // Check for context registration
+                    if (typeof nav.modelContext.getContexts === 'function') {
+                        const contexts = await nav.modelContext.getContexts();
+                        debugInfo.push(`📚 Contexts available: ${contexts?.length || 0}`);
+                        if (contexts && contexts.length > 0) {
+                            debugInfo.push(`Contexts: ${contexts.map(c => c.name).join(', ')}`);
+                        }
+                    }
+
+                } catch (error) {
+                    debugInfo.push(`❌ Error listing tools: ${error.message}`);
+                    toolsDiv.innerHTML = `<div class="status error">❌ Error: ${error.message}</div>`;
+                }
+            } else {
+                debugInfo.push('❌ navigator.modelContext: NOT FOUND');
+                statusDiv.innerHTML = '<div class="status error">❌ MCP-B Extension NOT detected</div>';
+                toolsDiv.innerHTML = '<div class="status warning">⚠️ Please install and enable the MCP-B Chrome extension</div>';
+            }
+
+            // Additional debug info
+            debugInfo.push(`🌐 Page URL: ${window.location.href}`);
+            debugInfo.push(`⏰ Timestamp: ${new Date().toISOString()}`);
+            debugInfo.push(`🔍 User Agent: ${navigator.userAgent.substring(0, 100)}...`);
+
+            debugDiv.textContent = debugInfo.join('\n');
+        }
+
+        // Run immediately and every 2 seconds
+        debugMCP();
+        setInterval(debugMCP, 2000);
+
+        // Listen for updates from MCP-B extension
+        window.addEventListener('modelcontext-tools-changed', debugMCP);
+    </script>
+</body>
+</html>
